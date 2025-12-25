@@ -6,6 +6,8 @@ import { formatCurrency, formatIncidentDate, formatCreatedDate } from '../../../
 import { sortClaims } from '../../../shared/utils/sorting';
 import { SortOption } from '../../../shared/types';
 import { getStatusColorClasses } from '../../../shared/utils/status';
+import { useTableVirtualization } from '../../../shared/hooks/useTableVirtualization';
+import { ROW_HEIGHT, CONTAINER_HEIGHT } from '../../../shared/virtualization';
 
 // Mock data for development - commented out to use API data
 // const mockClaims: Claim[] = [
@@ -68,6 +70,9 @@ const ClaimsDashboard: React.FC = () => {
     );
   }, [sortedClaims, searchTerm]);
 
+  const hasActiveFilters = selectedStatuses.length > 0 || !!searchTerm;
+  const rowHeight = hasActiveFilters ? 48 : ROW_HEIGHT;
+
   const formattedClaims: FormattedClaim[] = useMemo(() => {
     return filteredClaims.map(claim => ({
       ...claim,
@@ -78,6 +83,12 @@ const ClaimsDashboard: React.FC = () => {
       formattedCreatedDate: formatCreatedDate(claim.createdAt),
     }));
   }, [filteredClaims]);
+
+  // Use virtualization for performance
+  const { startIndex, endIndex, handleScroll } = useTableVirtualization(
+    formattedClaims.length,
+    rowHeight
+  );
 
   //if (isLoading) return <div className="text-center py-8">Loading...</div>;
   if (error) return <div className="text-center py-8 text-red-500">Error loading claims</div>;
@@ -140,10 +151,14 @@ const ClaimsDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
+          {/* Virtualized Table */}
+          <div
+            className="overflow-auto"
+            style={{ height: CONTAINER_HEIGHT }}
+            onScroll={handleScroll}
+          >
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0 z-10">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Claim ID</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -157,7 +172,11 @@ const ClaimsDashboard: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {formattedClaims.map((claim) => (
+                {/* Top spacer for virtualization */}
+                <tr style={{ height: startIndex * rowHeight }} />
+
+                {/* Visible rows only */}
+                {formattedClaims.slice(startIndex, endIndex).map((claim) => (
                   <tr key={claim.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{claim.number}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -174,8 +193,26 @@ const ClaimsDashboard: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{claim.formattedCreatedDate}</td>
                   </tr>
                 ))}
+
+                {/* Bottom spacer for virtualization */}
+                <tr style={{ height: (formattedClaims.length - endIndex) * rowHeight }} />
               </tbody>
             </table>
+          </div>
+
+          {/* Performance info */}
+          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+            <div>
+              <p className="text-sm text-gray-500">
+                Virtualized table: Showing {endIndex - startIndex} rendered rows of{' '}
+                {formattedClaims.length} total claims. Scroll to dynamically
+                load/unload data for optimal performance.
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Rendered range: {startIndex + 1}-
+                {Math.min(endIndex, formattedClaims.length)}
+              </p>
+            </div>
           </div>
 
           {formattedClaims.length === 0 && (
