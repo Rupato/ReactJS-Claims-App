@@ -13,14 +13,17 @@ import { useTableVirtualization } from '../../../shared/hooks/useTableVirtualiza
 import { useCardsVirtualization } from '../../../shared/hooks/useCardsVirtualization';
 import { ROW_HEIGHT, CONTAINER_HEIGHT } from '../../../shared/virtualization';
 import { CardsView } from '../../../widgets/claims-table/CardsView';
+import { useSearch } from '../../../shared/hooks/useSearch';
+import { SearchInput } from '../../../shared/ui/SearchInput';
 
 const ClaimsDashboard: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>('created-newest');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [claims, setClaims] = useState<Claim[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchClaims = async () => {
@@ -42,6 +45,27 @@ const ClaimsDashboard: React.FC = () => {
     fetchClaims();
   }, []);
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isSortDropdownOpen &&
+        !(event.target as Element).closest('.sort-dropdown')
+      ) {
+        setIsSortDropdownOpen(false);
+      }
+      if (
+        isStatusDropdownOpen &&
+        !(event.target as Element).closest('.status-dropdown')
+      ) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSortDropdownOpen, isStatusDropdownOpen]);
+
   const availableStatuses = useMemo(() => {
     const statusSet = new Set(claims.map((claim) => claim.status));
     return Array.from(statusSet).sort();
@@ -56,15 +80,9 @@ const ClaimsDashboard: React.FC = () => {
     return sortClaims(statusFilteredClaims, sortOption);
   }, [statusFilteredClaims, sortOption]);
 
-  const filteredClaims = useMemo(() => {
-    if (!searchTerm) return sortedClaims;
-    return sortedClaims.filter(
-      (claim) =>
-        claim.holder.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        claim.policyNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        claim.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [sortedClaims, searchTerm]);
+  // Search functionality (applied after sorting)
+  const { filteredClaims, isSearching, searchTerm, setSearchTerm } =
+    useSearch(sortedClaims);
 
   const hasActiveFilters = selectedStatuses.length > 0 || !!searchTerm;
   const rowHeight = hasActiveFilters ? 48 : ROW_HEIGHT;
@@ -92,6 +110,19 @@ const ClaimsDashboard: React.FC = () => {
   const { cardStartIndex, cardEndIndex, handleCardsScroll, cardsPerRow } =
     useCardsVirtualization(formattedClaims.length, viewMode);
 
+  const sortOptions = [
+    { value: 'created-newest' as SortOption, label: 'Newest First' },
+    { value: 'created-oldest' as SortOption, label: 'Oldest First' },
+    { value: 'amount-highest' as SortOption, label: 'Highest Amount' },
+    { value: 'amount-lowest' as SortOption, label: 'Lowest Amount' },
+    { value: 'total-highest' as SortOption, label: 'Highest Total' },
+    { value: 'total-lowest' as SortOption, label: 'Lowest Total' },
+  ];
+
+  const currentSortLabel =
+    sortOptions.find((option) => option.value === sortOption)?.label ||
+    'Newest First';
+
   //if (isLoading) return <div className="text-center py-8">Loading...</div>;
   if (error)
     return (
@@ -103,87 +134,153 @@ const ClaimsDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Claims Dashboard
-            </h1>
-            <p className="text-gray-600">View and manage insurance claims</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Claims Dashboard
+                </h1>
+                <p className="text-gray-600">
+                  View and manage insurance claims
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <SearchInput
+                  value={searchTerm}
+                  onChange={setSearchTerm}
+                  isSearching={isSearching}
+                />
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('table')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      viewMode === 'table'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Table View
+                  </button>
+                  <button
+                    onClick={() => setViewMode('cards')}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      viewMode === 'cards'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Cards View
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Filters */}
-          <div className="px-6 py-4 border-b space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <input
-                type="text"
-                placeholder="Search claims..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-
-              <select
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value as SortOption)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="created-newest">Newest First</option>
-                <option value="created-oldest">Oldest First</option>
-                <option value="amount-highest">Highest Amount</option>
-                <option value="amount-lowest">Lowest Amount</option>
-                <option value="total-highest">Highest Total</option>
-                <option value="total-lowest">Lowest Total</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              {/* Status Filters */}
-              <div className="flex flex-wrap gap-2">
-                {availableStatuses.map((status) => (
-                  <label key={status} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedStatuses.includes(status)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedStatuses([...selectedStatuses, status]);
-                        } else {
-                          setSelectedStatuses(
-                            selectedStatuses.filter((s) => s !== status)
-                          );
-                        }
-                      }}
-                      className="mr-2"
+          <div className="px-6 py-4 border-b">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between">
+              {/* Sort Dropdown */}
+              <div className="relative sort-dropdown">
+                <button
+                  onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 flex items-center justify-between min-w-[180px]"
+                >
+                  <span className="text-sm">{currentSortLabel}</span>
+                  <svg
+                    className={`w-4 h-4 ml-2 transition-transform ${isSortDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
                     />
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClasses(status)}`}
-                    >
-                      {status}
-                    </span>
-                  </label>
-                ))}
+                  </svg>
+                </button>
+
+                {isSortDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-50">
+                    {sortOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          setSortOption(option.value);
+                          setIsSortDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 ${
+                          sortOption === option.value
+                            ? 'bg-blue-50 text-blue-700'
+                            : 'text-gray-700'
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* View Mode Toggle */}
-              <div className="flex bg-gray-100 rounded-lg p-1">
+              {/* Status Filters Dropdown */}
+              <div className="relative status-dropdown">
                 <button
-                  onClick={() => setViewMode('table')}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'table'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 flex items-center justify-between min-w-[200px]"
                 >
-                  Table View
+                  <span className="text-sm">
+                    {selectedStatuses.length === 0
+                      ? 'Filter by Status'
+                      : `${selectedStatuses.length} status${selectedStatuses.length > 1 ? 'es' : ''} selected`}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 ml-2 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
                 </button>
-                <button
-                  onClick={() => setViewMode('cards')}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'cards'
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  Cards View
-                </button>
+
+                {isStatusDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
+                    {availableStatuses.map((status) => (
+                      <label
+                        key={status}
+                        className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedStatuses.includes(status)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedStatuses([
+                                ...selectedStatuses,
+                                status,
+                              ]);
+                            } else {
+                              setSelectedStatuses(
+                                selectedStatuses.filter((s) => s !== status)
+                              );
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClasses(status)}`}
+                        >
+                          {status}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
