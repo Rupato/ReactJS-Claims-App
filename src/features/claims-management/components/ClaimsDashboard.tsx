@@ -45,8 +45,6 @@ const ClaimsDashboard: React.FC = () => {
     fetchClaims();
   }, []);
 
-
-
   const availableStatuses = useMemo(() => {
     const statusSet = new Set(claims.map((claim) => claim.status));
     return Array.from(statusSet).sort();
@@ -91,9 +89,9 @@ const ClaimsDashboard: React.FC = () => {
   const { cardStartIndex, cardEndIndex, handleCardsScroll, cardsPerRow } =
     useCardsVirtualization(formattedClaims.length, viewMode);
 
-  const statusOptions = availableStatuses.map(status => ({
+  const statusOptions = availableStatuses.map((status) => ({
     value: status,
-    label: status
+    label: status,
   }));
 
   //if (isLoading) return <div className="text-center py-8">Loading...</div>;
@@ -174,7 +172,9 @@ const ClaimsDashboard: React.FC = () => {
             {/* Active Filters Chips */}
             {selectedStatuses.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mt-4">
-                <span className="text-sm text-gray-600 mr-2">Active filters:</span>
+                <span className="text-sm text-gray-600 mr-2">
+                  Active filters:
+                </span>
                 {selectedStatuses.map((status) => (
                   <div
                     key={status}
@@ -190,8 +190,18 @@ const ClaimsDashboard: React.FC = () => {
                       className="ml-1 hover:bg-black hover:bg-opacity-10 rounded-full p-0.5"
                       aria-label={`Remove ${status} filter`}
                     >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   </div>

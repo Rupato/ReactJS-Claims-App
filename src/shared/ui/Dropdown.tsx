@@ -50,7 +50,7 @@ const Dropdown = ({
       const isSelected = currentValues.includes(optionValue);
 
       if (isSelected) {
-        onChange(currentValues.filter(v => v !== optionValue));
+        onChange(currentValues.filter((v) => v !== optionValue));
       } else {
         onChange([...currentValues, optionValue]);
       }
@@ -69,7 +69,7 @@ const Dropdown = ({
       return `${selectedValues.length} selected`;
     } else {
       const singleValue = Array.isArray(value) ? value[0] : value;
-      const option = options.find(opt => opt.value === singleValue);
+      const option = options.find((opt) => opt.value === singleValue);
       return option ? `Sort by: ${option.label}` : placeholder;
     }
   };
@@ -107,7 +107,9 @@ const Dropdown = ({
       </button>
 
       {isOpen && (
-        <div className={`absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg ${menuClassName}`}>
+        <div
+          className={`absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg ${menuClassName}`}
+        >
           <div className="p-2">
             <div className="space-y-1 max-h-60 overflow-y-auto">
               {options.map((option) => (
