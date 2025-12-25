@@ -1,6 +1,8 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.PUBLIC_API_URL || 'http://localhost:8001',
+  BASE_URL:
+    (import.meta as { env?: Record<string, string> }).env?.PUBLIC_API_URL ||
+    'http://localhost:8001',
   ENDPOINTS: {
     CLAIMS: '/claims',
     POLICIES: '/policies',

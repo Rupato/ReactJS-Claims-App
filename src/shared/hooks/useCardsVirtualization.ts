@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { CONTAINER_HEIGHT, CARD_HEIGHT } from '../virtualization';
 
 export const useCardsVirtualization = (

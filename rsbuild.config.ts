@@ -1,6 +1,11 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 
+// Add Node.js types for process
+declare const process: {
+  env: Record<string, string | undefined>;
+};
+
 export default defineConfig({
   plugins: [pluginReact()],
   source: {
@@ -8,7 +13,9 @@ export default defineConfig({
       index: './src/main.tsx',
     },
     define: {
-      'import.meta.env.PUBLIC_API_URL': JSON.stringify(process.env.PUBLIC_API_URL || 'http://localhost:8001'),
+      'import.meta.env.PUBLIC_API_URL': JSON.stringify(
+        process.env.PUBLIC_API_URL || 'http://localhost:8001'
+      ),
     },
   },
   html: {

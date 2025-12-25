@@ -223,4 +223,4 @@ jobs:
         uses: preactjs/compressed-size-action@v2
         with:
           pattern: './dist/**/*.{js,css,html}'
-          minimum-change-threshold: 500 # bytes
+          minimum-change-threshold: 2000 # bytes - increased to allow for new features

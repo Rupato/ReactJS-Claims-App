@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { ROW_HEIGHT, BUFFER_SIZE } from '../virtualization';
 
 export const useTableVirtualization = (

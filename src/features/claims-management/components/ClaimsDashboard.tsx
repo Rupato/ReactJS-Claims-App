@@ -1,7 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Claim, FormattedClaim } from '../../../entities/claim/types';
 import { API_CONFIG } from '../../../shared/constants';
-import { formatCurrency, formatIncidentDate, formatCreatedDate } from '../../../shared/utils/formatters';
+import {
+  formatCurrency,
+  formatIncidentDate,
+  formatCreatedDate,
+} from '../../../shared/utils/formatters';
 import { sortClaims } from '../../../shared/utils/sorting';
 import { SortOption } from '../../../shared/types';
 import { getStatusColorClasses } from '../../../shared/utils/status';
@@ -16,15 +20,15 @@ const ClaimsDashboard: React.FC = () => {
   const [sortOption, setSortOption] = useState<SortOption>('created-newest');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [claims, setClaims] = useState<Claim[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchClaims = async () => {
       try {
-        setIsLoading(true);
         setError(null);
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}?_limit=200`);
+        const response = await fetch(
+          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}?_limit=200`
+        );
         if (!response.ok) throw new Error('Failed to fetch claims');
         const data = await response.json();
         setClaims(data);
@@ -32,8 +36,6 @@ const ClaimsDashboard: React.FC = () => {
         console.error('Failed to fetch claims:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
         setClaims([]);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -41,13 +43,13 @@ const ClaimsDashboard: React.FC = () => {
   }, []);
 
   const availableStatuses = useMemo(() => {
-    const statusSet = new Set(claims.map(claim => claim.status));
+    const statusSet = new Set(claims.map((claim) => claim.status));
     return Array.from(statusSet).sort();
   }, [claims]);
 
   const statusFilteredClaims = useMemo(() => {
     if (selectedStatuses.length === 0) return claims;
-    return claims.filter(claim => selectedStatuses.includes(claim.status));
+    return claims.filter((claim) => selectedStatuses.includes(claim.status));
   }, [claims, selectedStatuses]);
 
   const sortedClaims = useMemo(() => {
@@ -56,10 +58,11 @@ const ClaimsDashboard: React.FC = () => {
 
   const filteredClaims = useMemo(() => {
     if (!searchTerm) return sortedClaims;
-    return sortedClaims.filter(claim =>
-      claim.holder.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      claim.policyNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      claim.description.toLowerCase().includes(searchTerm.toLowerCase())
+    return sortedClaims.filter(
+      (claim) =>
+        claim.holder.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        claim.policyNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        claim.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [sortedClaims, searchTerm]);
 
@@ -67,11 +70,13 @@ const ClaimsDashboard: React.FC = () => {
   const rowHeight = hasActiveFilters ? 48 : ROW_HEIGHT;
 
   const formattedClaims: FormattedClaim[] = useMemo(() => {
-    return filteredClaims.map(claim => ({
+    return filteredClaims.map((claim) => ({
       ...claim,
       formattedClaimAmount: formatCurrency(claim.amount),
       formattedProcessingFee: formatCurrency(claim.processingFee),
-      formattedTotalAmount: formatCurrency((parseFloat(claim.amount) + parseFloat(claim.processingFee)).toString()),
+      formattedTotalAmount: formatCurrency(
+        (parseFloat(claim.amount) + parseFloat(claim.processingFee)).toString()
+      ),
       formattedIncidentDate: formatIncidentDate(claim.incidentDate),
       formattedCreatedDate: formatCreatedDate(claim.createdAt),
     }));
@@ -84,22 +89,23 @@ const ClaimsDashboard: React.FC = () => {
   );
 
   // Cards virtualization
-  const {
-    cardStartIndex,
-    cardEndIndex,
-    handleCardsScroll,
-    cardsPerRow
-  } = useCardsVirtualization(formattedClaims.length, viewMode);
+  const { cardStartIndex, cardEndIndex, handleCardsScroll, cardsPerRow } =
+    useCardsVirtualization(formattedClaims.length, viewMode);
 
   //if (isLoading) return <div className="text-center py-8">Loading...</div>;
-  if (error) return <div className="text-center py-8 text-red-500">Error loading claims</div>;
+  if (error)
+    return (
+      <div className="text-center py-8 text-red-500">Error loading claims</div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b">
-            <h1 className="text-2xl font-bold text-gray-900">Claims Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Claims Dashboard
+            </h1>
             <p className="text-gray-600">View and manage insurance claims</p>
           </div>
 
@@ -131,7 +137,7 @@ const ClaimsDashboard: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               {/* Status Filters */}
               <div className="flex flex-wrap gap-2">
-                {availableStatuses.map(status => (
+                {availableStatuses.map((status) => (
                   <label key={status} className="flex items-center">
                     <input
                       type="checkbox"
@@ -140,12 +146,16 @@ const ClaimsDashboard: React.FC = () => {
                         if (e.target.checked) {
                           setSelectedStatuses([...selectedStatuses, status]);
                         } else {
-                          setSelectedStatuses(selectedStatuses.filter(s => s !== status));
+                          setSelectedStatuses(
+                            selectedStatuses.filter((s) => s !== status)
+                          );
                         }
                       }}
                       className="mr-2"
                     />
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClasses(status)}`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClasses(status)}`}
+                    >
                       {status}
                     </span>
                   </label>
@@ -190,15 +200,33 @@ const ClaimsDashboard: React.FC = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0 z-10">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Claim ID</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Holder</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Policy</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Fee</th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Incident</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Claim ID
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Holder
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Policy
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Amount
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Fee
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Total
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Incident
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -206,26 +234,50 @@ const ClaimsDashboard: React.FC = () => {
                     <tr style={{ height: startIndex * rowHeight }} />
 
                     {/* Visible rows only */}
-                    {formattedClaims.slice(startIndex, endIndex).map((claim) => (
-                      <tr key={claim.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{claim.number}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClasses(claim.status)}`}>
-                            {claim.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{claim.holder}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{claim.policyNumber}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">{claim.formattedClaimAmount}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">{claim.formattedProcessingFee}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">{claim.formattedTotalAmount}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{claim.formattedIncidentDate}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{claim.formattedCreatedDate}</td>
-                      </tr>
-                    ))}
+                    {formattedClaims
+                      .slice(startIndex, endIndex)
+                      .map((claim) => (
+                        <tr key={claim.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {claim.number}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClasses(claim.status)}`}
+                            >
+                              {claim.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {claim.holder}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {claim.policyNumber}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                            {claim.formattedClaimAmount}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                            {claim.formattedProcessingFee}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                            {claim.formattedTotalAmount}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {claim.formattedIncidentDate}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {claim.formattedCreatedDate}
+                          </td>
+                        </tr>
+                      ))}
 
                     {/* Bottom spacer for virtualization */}
-                    <tr style={{ height: (formattedClaims.length - endIndex) * rowHeight }} />
+                    <tr
+                      style={{
+                        height: (formattedClaims.length - endIndex) * rowHeight,
+                      }}
+                    />
                   </tbody>
                 </table>
               </div>
@@ -234,9 +286,9 @@ const ClaimsDashboard: React.FC = () => {
               <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
                 <div>
                   <p className="text-sm text-gray-500">
-                    Virtualized table: Showing {endIndex - startIndex} rendered rows of{' '}
-                    {formattedClaims.length} total claims. Scroll to dynamically
-                    load/unload data for optimal performance.
+                    Virtualized table: Showing {endIndex - startIndex} rendered
+                    rows of {formattedClaims.length} total claims. Scroll to
+                    dynamically load/unload data for optimal performance.
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
                     Rendered range: {startIndex + 1}-
