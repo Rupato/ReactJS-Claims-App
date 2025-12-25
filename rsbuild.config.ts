@@ -7,6 +7,9 @@ export default defineConfig({
     entry: {
       index: './src/main.tsx',
     },
+    define: {
+      'import.meta.env.PUBLIC_API_URL': JSON.stringify(process.env.PUBLIC_API_URL || 'http://localhost:8001'),
+    },
   },
   html: {
     template: './index.html',

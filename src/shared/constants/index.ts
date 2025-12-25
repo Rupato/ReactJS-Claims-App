@@ -1,6 +1,6 @@
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_URL || 'http://localhost:8001',
+  BASE_URL: import.meta.env.PUBLIC_API_URL || 'http://localhost:8001',
   ENDPOINTS: {
     CLAIMS: '/api/v1/claims',
     POLICIES: '/api/v1/policies',
