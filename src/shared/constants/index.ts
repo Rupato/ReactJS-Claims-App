@@ -2,8 +2,8 @@
 export const API_CONFIG = {
   BASE_URL: import.meta.env.PUBLIC_API_URL || 'http://localhost:8001',
   ENDPOINTS: {
-    CLAIMS: '/api/v1/claims',
-    POLICIES: '/api/v1/policies',
+    CLAIMS: '/claims',
+    POLICIES: '/policies',
   },
   CACHE_DURATION: 300, // 5 minutes in seconds
 } as const;
