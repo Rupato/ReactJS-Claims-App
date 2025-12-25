@@ -1,5 +1,4 @@
-import React, { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Claim, FormattedClaim } from '../../../entities/claim/types';
 import { API_CONFIG } from '../../../shared/constants';
 import { formatCurrency, formatIncidentDate, formatCreatedDate } from '../../../shared/utils/formatters';
@@ -31,21 +30,30 @@ const ClaimsDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>('created-newest');
+  const [claims, setClaims] = useState<Claim[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const { data: claims = [], isLoading, error } = useQuery({
-    queryKey: ['claims'],
-    queryFn: async (): Promise<Claim[]> => {
+  useEffect(() => {
+    const fetchClaims = async () => {
       try {
+        setIsLoading(true);
+        setError(null);
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}?_limit=200`);
-        console.log(response)
         if (!response.ok) throw new Error('Failed to fetch claims');
-        return response.json();
-      } catch (error) {
-        console.error('Failed to fetch claims:', error);
-        return [];
+        const data = await response.json();
+        setClaims(data);
+      } catch (err) {
+        console.error('Failed to fetch claims:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        setClaims([]);
+      } finally {
+        setIsLoading(false);
       }
-    },
-  });
+    };
+
+    fetchClaims();
+  }, []);
 
   const availableStatuses = useMemo(() => {
     const statusSet = new Set(claims.map(claim => claim.status));
