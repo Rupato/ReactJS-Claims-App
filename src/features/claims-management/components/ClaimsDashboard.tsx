@@ -7,74 +7,23 @@ import { sortClaims } from '../../../shared/utils/sorting';
 import { SortOption } from '../../../shared/types';
 import { getStatusColorClasses } from '../../../shared/utils/status';
 
-// Mock data for development
-const mockClaims: Claim[] = [
-  {
-    id: '1',
-    number: 'CL-2024-001',
-    incidentDate: '2024-12-20T10:00:00Z',
-    createdAt: '2024-12-21T08:00:00Z',
-    amount: '2500.00',
-    holder: 'John Smith',
-    policyNumber: 'POL-2024-1001',
-    insuredName: 'John Smith',
-    description: 'Car accident on Main Street',
-    processingFee: '150.00',
-    status: 'Submitted',
-  },
-  {
-    id: '2',
-    number: 'CL-2024-002',
-    incidentDate: '2024-12-18T14:30:00Z',
-    createdAt: '2024-12-19T09:15:00Z',
-    amount: '1800.00',
-    holder: 'Sarah Johnson',
-    policyNumber: 'POL-2024-1002',
-    insuredName: 'Sarah Johnson',
-    description: 'Water damage from burst pipe',
-    processingFee: '120.00',
-    status: 'Approved',
-  },
-  {
-    id: '3',
-    number: 'CL-2024-003',
-    incidentDate: '2024-12-15T16:45:00Z',
-    createdAt: '2024-12-16T11:30:00Z',
-    amount: '3200.00',
-    holder: 'Mike Wilson',
-    policyNumber: 'POL-2024-1003',
-    insuredName: 'Mike Wilson',
-    description: 'Theft of bicycle from garage',
-    processingFee: '180.00',
-    status: 'Processed',
-  },
-  {
-    id: '4',
-    number: 'CL-2024-004',
-    incidentDate: '2024-12-22T09:20:00Z',
-    createdAt: '2024-12-22T10:00:00Z',
-    amount: '950.00',
-    holder: 'Emma Davis',
-    policyNumber: 'POL-2024-1004',
-    insuredName: 'Emma Davis',
-    description: 'Broken window from storm',
-    processingFee: '80.00',
-    status: 'Rejected',
-  },
-  {
-    id: '5',
-    number: 'CL-2024-005',
-    incidentDate: '2024-12-19T12:00:00Z',
-    createdAt: '2024-12-20T14:20:00Z',
-    amount: '4100.00',
-    holder: 'Robert Brown',
-    policyNumber: 'POL-2024-1005',
-    insuredName: 'Robert Brown',
-    description: 'Fire damage to kitchen',
-    processingFee: '220.00',
-    status: 'Completed',
-  },
-];
+// Mock data for development - commented out to use API data
+// const mockClaims: Claim[] = [
+//   {
+//     id: '1',
+//     number: 'CL-2024-001',
+//     incidentDate: '2024-12-20T10:00:00Z',
+//     createdAt: '2024-12-21T08:00:00Z',
+//     amount: '2500.00',
+//     holder: 'John Smith',
+//     policyNumber: 'POL-2024-1001',
+//     insuredName: 'John Smith',
+//     description: 'Car accident on Main Street',
+//     processingFee: '150.00',
+//     status: 'Submitted',
+//   },
+//   // ... other mock claims
+// ];
 
 const ClaimsDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,12 +34,13 @@ const ClaimsDashboard: React.FC = () => {
     queryKey: ['claims'],
     queryFn: async (): Promise<Claim[]> => {
       try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}`);
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}?_limit=200`);
+        console.log(response)
         if (!response.ok) throw new Error('Failed to fetch claims');
         return response.json();
-      } catch {
-        // Fall back to mock data if API is not available
-        return mockClaims;
+      } catch (error) {
+        console.error('Failed to fetch claims:', error);
+        return [];
       }
     },
   });
@@ -129,7 +79,7 @@ const ClaimsDashboard: React.FC = () => {
     }));
   }, [filteredClaims]);
 
-  if (isLoading) return <div className="text-center py-8">Loading...</div>;
+  //if (isLoading) return <div className="text-center py-8">Loading...</div>;
   if (error) return <div className="text-center py-8 text-red-500">Error loading claims</div>;
 
   return (

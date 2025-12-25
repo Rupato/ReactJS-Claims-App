@@ -1,13 +1,13 @@
 // Core types
 export interface Claim {
-  id: string;
+  id: number;
   number: string;
   incidentDate: string;
   createdAt: string;
   amount: string;
   holder: string;
   policyNumber: string;
-  insuredName: string;
+  insuredItem: string;
   description: string;
   processingFee: string;
   status: string;
