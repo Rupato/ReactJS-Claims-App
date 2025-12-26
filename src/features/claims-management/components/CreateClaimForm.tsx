@@ -126,11 +126,9 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
   const handleAmountFocus = () => {
     // On focus, ensure we show the raw numeric value for editing
     const currentValue = formValues.amount;
-    console.log(currentValue, formValues);
     if (currentValue && currentValue.includes(',')) {
       // Remove formatting for editing
       const rawValue = currentValue.replace(/,/g, '');
-      console.log(rawValue);
       setValue('amount', rawValue);
     }
   };
@@ -182,12 +180,14 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
 
   // Handle form submission with React Hook Form
   const onSubmit = (data: CreateClaimFormData) => {
+    console.log('Original form data:', data);
     // Clean currency values by removing commas before submission
     const cleanData = {
       ...data,
       amount: data.amount.replace(/,/g, ''),
       processingFee: data.processingFee.replace(/,/g, ''),
     };
+    console.log('Cleaned form data:', cleanData);
 
     createClaimMutation.mutate({
       holder: cleanData.holder,
@@ -314,7 +314,12 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                         />
                       ) : (
                         <input
-                          type={field.type}
+                          type={
+                            field.name === 'amount' ||
+                            field.name === 'processingFee'
+                              ? 'text'
+                              : field.type
+                          }
                           id={field.name}
                           step={field.step}
                           min={field.min}
