@@ -304,6 +304,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                           max={field.max}
                           className={inputClasses}
                           placeholder={field.placeholder}
+                          readOnly={field.name === 'holder' && isAutoFilled}
                           value={
                             field.name === 'amount'
                               ? displayAmount || formValues.amount || ''
