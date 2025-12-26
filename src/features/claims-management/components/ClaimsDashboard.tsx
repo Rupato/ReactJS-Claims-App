@@ -149,15 +149,6 @@ const ClaimsDashboard: React.FC = () => {
           {/* Filters */}
           <div className="px-6 py-4 border-b">
             <div className="flex flex-col sm:flex-row gap-4 justify-between">
-              {/* Sort Dropdown */}
-              <Dropdown
-                options={SORT_OPTIONS}
-                value={sortOption}
-                onChange={(value) => setSortOption(value as SortOption)}
-                placeholder="Sort by"
-                className="sort-dropdown"
-              />
-
               {/* Status Filters Dropdown */}
               <Dropdown
                 options={statusOptions}
@@ -166,6 +157,15 @@ const ClaimsDashboard: React.FC = () => {
                 placeholder="Filter by Status"
                 multiSelect={true}
                 className="status-dropdown"
+              />
+
+              {/* Sort Dropdown */}
+              <Dropdown
+                options={SORT_OPTIONS}
+                value={sortOption}
+                onChange={(value) => setSortOption(value as SortOption)}
+                placeholder="Sort by"
+                className="sort-dropdown"
               />
             </div>
 
