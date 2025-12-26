@@ -126,9 +126,11 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
   const handleAmountFocus = () => {
     // On focus, ensure we show the raw numeric value for editing
     const currentValue = formValues.amount;
+    console.log(currentValue);
     if (currentValue && currentValue.includes(',')) {
       // Remove formatting for editing
       const rawValue = currentValue.replace(/,/g, '');
+      console.log(rawValue);
       setValue('amount', rawValue);
     }
   };
@@ -145,7 +147,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
           maximumFractionDigits: 2,
         });
         // Set the formatted value for display
-        setValue('amount', formatted);
+        setValue('amount', formatted, { shouldValidate: false });
       }
       // If invalid, keep the current value (don't clear it)
     }
