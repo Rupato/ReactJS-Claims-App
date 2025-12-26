@@ -123,33 +123,37 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
   // Currency formatting on blur
   const handleAmountBlur = () => {
     const value = formValues.amount;
-    if (
-      value &&
-      value.trim() !== '' &&
-      !isNaN(parseFloat(value.replace(/,/g, '')))
-    ) {
-      const num = parseFloat(value.replace(/,/g, '')); // Remove existing commas
-      const formatted = num.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-      setValue('amount', formatted, { shouldValidate: false });
+    if (value && value.trim() !== '') {
+      // Remove existing commas and parse the number
+      const cleanValue = value.replace(/,/g, '');
+      const num = parseFloat(cleanValue);
+
+      // Only format if it's a valid number
+      if (!isNaN(num)) {
+        const formatted = num.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        setValue('amount', formatted, { shouldValidate: false });
+      }
     }
   };
 
   const handleProcessingFeeBlur = () => {
     const value = formValues.processingFee;
-    if (
-      value &&
-      value.trim() !== '' &&
-      !isNaN(parseFloat(value.replace(/,/g, '')))
-    ) {
-      const num = parseFloat(value.replace(/,/g, '')); // Remove existing commas
-      const formatted = num.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
-      setValue('processingFee', formatted, { shouldValidate: false });
+    if (value && value.trim() !== '') {
+      // Remove existing commas and parse the number
+      const cleanValue = value.replace(/,/g, '');
+      const num = parseFloat(cleanValue);
+
+      // Only format if it's a valid number
+      if (!isNaN(num)) {
+        const formatted = num.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        setValue('processingFee', formatted, { shouldValidate: false });
+      }
     }
   };
 
