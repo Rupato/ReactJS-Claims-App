@@ -9,7 +9,10 @@ import globals from 'globals';
 const commonConfig = {
   languageOptions: {
     ecmaVersion: 2020,
-    globals: globals.browser,
+    globals: {
+      ...globals.browser,
+      process: 'readonly', // Rsbuild injects process in browser
+    },
     parserOptions: {
       ecmaVersion: 'latest',
       ecmaFeatures: { jsx: true },

@@ -29,6 +29,8 @@ import {
 import { SearchInput } from '../../../shared/ui/SearchInput';
 import Dropdown from '../../../shared/ui/Dropdown';
 import { SORT_OPTIONS } from '../../../shared/ui/utils';
+import { LoadingSkeleton } from '../../../shared/ui/LoadingSkeleton';
+import { ErrorFallback } from '../../../shared/ui/ErrorFallback';
 import { ClaimDetailsModal } from './ClaimDetailsModal';
 import { ClaimCard } from '../../../entities/claim/ui/ClaimCard';
 
@@ -73,7 +75,6 @@ const ClaimsDashboard: React.FC = () => {
   });
 
   const claims = useMemo(() => claimsData || [], [claimsData]);
-  const error = queryError?.message || null;
 
   const availableStatuses = useMemo(() => {
     const statusSet = new Set(claims.map((claim) => claim.status));
@@ -298,52 +299,16 @@ const ClaimsDashboard: React.FC = () => {
     ]
   );
 
-  if (isLoading)
-    return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Claims Dashboard
-                </h1>
-                <p className="text-gray-600">
-                  View and manage insurance claims
-                </p>
-              </div>
-            </div>
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-sm text-gray-600">Loading claims...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  if (isLoading) return <LoadingSkeleton viewMode={viewMode} />;
 
-  if (error)
+  if (queryError) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Claims Dashboard
-                </h1>
-                <p className="text-gray-600">
-                  View and manage insurance claims
-                </p>
-              </div>
-            </div>
-            <div className="text-center py-8 text-red-500">
-              Error loading claims: {error}
-            </div>
-          </div>
-        </div>
-      </div>
+      <ErrorFallback
+        error={queryError}
+        onRetry={() => window.location.reload()}
+      />
     );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
