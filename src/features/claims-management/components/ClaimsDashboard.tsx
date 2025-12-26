@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+} from 'react';
 import { Claim, FormattedClaim } from '../../../entities/claim/types';
 import { API_CONFIG } from '../../../shared/constants';
 import {
@@ -12,11 +18,13 @@ import { getStatusColorClasses } from '../../../shared/utils/status';
 import { useTableVirtualization } from '../../../shared/hooks/useTableVirtualization';
 import { useCardsVirtualization } from '../../../shared/hooks/useCardsVirtualization';
 import { ROW_HEIGHT, CONTAINER_HEIGHT } from '../../../shared/virtualization';
-import { CardsView } from '../../../widgets/claims-table/CardsView';
+
 import { useSearch } from '../../../shared/hooks/useSearch';
 import { SearchInput } from '../../../shared/ui/SearchInput';
 import Dropdown from '../../../shared/ui/Dropdown';
 import { SORT_OPTIONS } from '../../../shared/ui/utils';
+import { ClaimDetailsModal } from './ClaimDetailsModal';
+import { ClaimCard } from '../../../entities/claim/ui/ClaimCard';
 
 const ClaimsDashboard: React.FC = () => {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
@@ -24,6 +32,17 @@ const ClaimsDashboard: React.FC = () => {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [claims, setClaims] = useState<Claim[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedClaim, setSelectedClaim] = useState<FormattedClaim | null>(
+    null
+  );
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+  const [selectedCardIndex, setSelectedCardIndex] = useState<number>(-1);
+
+  // Refs for navigation
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
+  const cardsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchClaims = async () => {
@@ -93,6 +112,181 @@ const ClaimsDashboard: React.FC = () => {
     value: status,
     label: status,
   }));
+
+  const handleRowSelect = useCallback((claim: FormattedClaim) => {
+    setSelectedClaim(claim);
+    setIsModalOpen(true);
+  }, []);
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedClaim(null);
+  };
+
+  // Global keyboard listener to activate navigation
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Only activate if we're not already focused and an arrow key is pressed
+      if (
+        selectedIndex === -1 &&
+        selectedCardIndex === -1 &&
+        (e.key === 'ArrowUp' ||
+          e.key === 'ArrowDown' ||
+          e.key === 'ArrowLeft' ||
+          e.key === 'ArrowRight')
+      ) {
+        e.preventDefault();
+        if (viewMode === 'table' && containerRef.current) {
+          containerRef.current.focus();
+          setSelectedIndex(cardStartIndex);
+        } else if (viewMode === 'cards' && cardsContainerRef.current) {
+          cardsContainerRef.current.focus();
+          setSelectedCardIndex(cardStartIndex);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleGlobalKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [selectedIndex, selectedCardIndex, startIndex, cardStartIndex, viewMode]);
+
+  // Focus on the selected row when selectedIndex changes
+  useEffect(() => {
+    if (selectedIndex >= 0 && selectedIndex < formattedClaims.length) {
+      const visibleIndex = selectedIndex - startIndex;
+      if (visibleIndex >= 0 && visibleIndex < rowRefs.current.length) {
+        const rowElement = rowRefs.current[visibleIndex];
+        if (rowElement) {
+          rowElement.focus();
+          // Ensure the row is visible in the scroll container
+          rowElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+          });
+        }
+      }
+    }
+  }, [selectedIndex, startIndex, formattedClaims.length]);
+
+  // Handle card keyboard navigation
+  const handleCardKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const visibleCards = formattedClaims.slice(cardStartIndex, cardEndIndex);
+      const currentVisibleIndex = selectedCardIndex - cardStartIndex;
+
+      switch (e.key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          if (selectedCardIndex === -1) {
+            setSelectedCardIndex(cardStartIndex);
+          } else if (currentVisibleIndex < visibleCards.length - 1) {
+            setSelectedCardIndex((prev) => prev + 1);
+          }
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (selectedCardIndex === -1) {
+            setSelectedCardIndex(cardStartIndex);
+          } else if (currentVisibleIndex > 0) {
+            setSelectedCardIndex((prev) => prev - 1);
+          }
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          if (selectedCardIndex === -1) {
+            setSelectedCardIndex(cardStartIndex);
+          } else {
+            const newIndex = selectedCardIndex + cardsPerRow;
+            if (newIndex < formattedClaims.length) {
+              setSelectedCardIndex(newIndex);
+            }
+          }
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          if (selectedCardIndex === -1) {
+            setSelectedCardIndex(cardStartIndex);
+          } else {
+            const newIndex = selectedCardIndex - cardsPerRow;
+            if (newIndex >= 0) {
+              setSelectedCardIndex(newIndex);
+            }
+          }
+          break;
+        case 'Enter':
+          if (
+            selectedCardIndex >= 0 &&
+            selectedCardIndex < formattedClaims.length
+          ) {
+            handleRowSelect(formattedClaims[selectedCardIndex]);
+          }
+          break;
+      }
+    },
+    [
+      selectedCardIndex,
+      cardStartIndex,
+      cardEndIndex,
+      formattedClaims,
+      handleRowSelect,
+      cardsPerRow,
+    ]
+  );
+
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const visibleClaims = formattedClaims.slice(startIndex, endIndex);
+      const currentVisibleIndex = selectedIndex - startIndex;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          if (selectedIndex === -1) {
+            // No row selected, select the first visible row
+            setSelectedIndex(startIndex);
+          } else if (currentVisibleIndex < visibleClaims.length - 1) {
+            setSelectedIndex((prev) => prev + 1);
+          } else if (endIndex < formattedClaims.length) {
+            // Scroll down to show more rows
+            containerRef.current?.scrollBy(0, rowHeight);
+            // Move to the newly visible row
+            setSelectedIndex(endIndex);
+          }
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          if (selectedIndex === -1) {
+            // No row selected, select the first visible row
+            setSelectedIndex(startIndex);
+          } else if (currentVisibleIndex > 0) {
+            setSelectedIndex((prev) => prev - 1);
+          } else if (startIndex > 0) {
+            // Scroll up to show more rows
+            containerRef.current?.scrollBy(0, -rowHeight);
+            // Move to the newly visible row
+            setSelectedIndex(startIndex - 1);
+          }
+          break;
+        case 'Enter':
+          if (selectedIndex >= 0 && selectedIndex < formattedClaims.length) {
+            handleRowSelect(formattedClaims[selectedIndex]);
+          }
+          break;
+      }
+    },
+    [
+      selectedIndex,
+      startIndex,
+      endIndex,
+      formattedClaims,
+      handleRowSelect,
+      rowHeight,
+    ]
+  );
 
   //if (isLoading) return <div className="text-center py-8">Loading...</div>;
   if (error)
@@ -221,10 +415,20 @@ const ClaimsDashboard: React.FC = () => {
             <>
               {/* Virtualized Table */}
               <div
-                className="overflow-auto"
+                ref={containerRef}
+                className="overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
                 style={{ height: CONTAINER_HEIGHT }}
                 onScroll={handleScroll}
+                onKeyDown={handleKeyDown}
+                tabIndex={viewMode === 'table' ? 0 : -1}
+                data-table-container
+                role="region"
+                aria-labelledby="table-keyboard-instructions"
               >
+                <div id="table-keyboard-instructions" className="sr-only">
+                  Use ↑↓ arrow keys to navigate rows, Enter to open claim
+                  details
+                </div>
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0 z-10">
                     <tr>
@@ -264,8 +468,20 @@ const ClaimsDashboard: React.FC = () => {
                     {/* Visible rows only */}
                     {formattedClaims
                       .slice(startIndex, endIndex)
-                      .map((claim) => (
-                        <tr key={claim.id} className="hover:bg-gray-50">
+                      .map((claim, index) => (
+                        <tr
+                          key={claim.id}
+                          ref={(el) => {
+                            rowRefs.current[index] = el;
+                          }}
+                          className={`hover:bg-gray-50 cursor-pointer ${
+                            selectedIndex === startIndex + index
+                              ? 'bg-blue-50 ring-2 ring-blue-500 ring-inset'
+                              : ''
+                          }`}
+                          onClick={() => handleRowSelect(claim)}
+                          tabIndex={-1}
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {claim.number}
                           </td>
@@ -326,15 +542,88 @@ const ClaimsDashboard: React.FC = () => {
               </div>
             </>
           ) : (
-            <CardsView
-              formattedClaims={formattedClaims}
-              cardStartIndex={cardStartIndex}
-              cardEndIndex={cardEndIndex}
-              cardsPerRow={cardsPerRow}
-              onScroll={handleCardsScroll}
-              hasActiveFilters={hasActiveFilters}
-              onCardClick={(claim) => console.log('Card clicked:', claim)}
-            />
+            <>
+              <div
+                ref={cardsContainerRef}
+                className="overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+                style={{ height: CONTAINER_HEIGHT }}
+                onScroll={handleCardsScroll}
+                onKeyDown={handleCardKeyDown}
+                tabIndex={viewMode === 'cards' ? 0 : -1}
+                data-cards-container
+                role="region"
+                aria-labelledby="cards-keyboard-instructions"
+              >
+                <div id="cards-keyboard-instructions" className="sr-only">
+                  Use ↑↓←→ arrow keys to navigate cards, Enter to open claim
+                  details
+                </div>
+                <div className="p-6">
+                  <h3 id="cards-keyboard-label" className="sr-only">
+                    Insurance Claims Cards
+                  </h3>
+                  {/* Top spacer for cards virtualization */}
+                  <div
+                    style={{
+                      height:
+                        Math.floor(cardStartIndex / cardsPerRow) *
+                        (hasActiveFilters ? 200 : 240),
+                    }}
+                  />
+                  <div
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    role="grid"
+                    aria-labelledby="cards-keyboard-label"
+                  >
+                    {formattedClaims
+                      .slice(cardStartIndex, cardEndIndex)
+                      .map((claim, index) => (
+                        <div
+                          key={claim.id}
+                          className={`${
+                            selectedCardIndex === cardStartIndex + index
+                              ? 'ring-2 ring-blue-500 ring-offset-2'
+                              : ''
+                          }`}
+                        >
+                          <ClaimCard
+                            claim={claim}
+                            onCardClick={handleRowSelect}
+                            isSelected={
+                              selectedCardIndex === cardStartIndex + index
+                            }
+                          />
+                        </div>
+                      ))}
+                  </div>
+                  {/* Bottom spacer for cards virtualization */}
+                  <div
+                    style={{
+                      height:
+                        Math.floor(
+                          (formattedClaims.length - cardEndIndex) / cardsPerRow
+                        ) * (hasActiveFilters ? 200 : 240),
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Performance info for cards */}
+              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <div>
+                  <p className="text-sm text-gray-500">
+                    Virtualized cards: Showing {cardEndIndex - cardStartIndex}{' '}
+                    rendered cards of {formattedClaims.length} total claims.
+                    Scroll to dynamically load/unload data for optimal
+                    performance.
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Rendered range: {cardStartIndex + 1}-
+                    {Math.min(cardEndIndex, formattedClaims.length)}
+                  </p>
+                </div>
+              </div>
+            </>
           )}
 
           {formattedClaims.length === 0 && (
@@ -344,6 +633,13 @@ const ClaimsDashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Claim Details Modal */}
+      <ClaimDetailsModal
+        claim={selectedClaim}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };

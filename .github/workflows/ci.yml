@@ -33,36 +33,36 @@ jobs:
         run: pnpm lint
 
   # MANDATORY: Unit + Component Tests
-  # test:
-  #   name: '2. CI / test'
-  #   runs-on: ubuntu-latest
+  test:
+    name: '2. CI / test'
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  #     - name: Setup pnpm
-  #       uses: pnpm/action-setup@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #         cache: 'pnpm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
 
-  #     - name: Install dependencies
-  #       run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-  #     - name: Run tests with coverage
-  #       run: pnpm test --run --coverage
+      - name: Run tests with coverage
+        run: pnpm test --run --coverage
 
-  #     - name: Upload coverage to Codecov
-  #       uses: codecov/codecov-action@v4
-  #       with:
-  #         file: ./coverage/lcov.info
-  #         flags: unittests
-  #         name: codecov-umbrella
-  #         fail_ci_if_error: false
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
 
   # MANDATORY: Production Build
   build:
@@ -137,36 +137,36 @@ jobs:
         run: pnpm exec prettier --check .
 
   # ADVANCED: Coverage Analysis
-  # coverage:
-  #   name: '6. CI / coverage'
-  #   runs-on: ubuntu-latest
+  coverage:
+    name: '6. CI / coverage'
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  #     - name: Setup pnpm
-  #       uses: pnpm/action-setup@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
 
-  #     - name: Setup Node.js
-  #       uses: actions/setup-node@v4
-  #       with:
-  #         node-version: '20'
-  #         cache: 'pnpm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
 
-  #     - name: Install dependencies
-  #       run: pnpm install --frozen-lockfile
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
-  #     - name: Run tests with coverage
-  #       run: pnpm test --run --coverage
+      - name: Run tests with coverage
+        run: pnpm test --run --coverage
 
-  #     - name: Upload coverage to Codecov
-  #       uses: codecov/codecov-action@v4
-  #       with:
-  #         file: ./coverage/lcov.info
-  #         flags: unittests
-  #         name: codecov-umbrella
-  #         fail_ci_if_error: false
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
 
   # ADVANCED: Security & Dependencies
   security:
