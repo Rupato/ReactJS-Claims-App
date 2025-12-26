@@ -21,7 +21,11 @@ import { useCardsVirtualization } from '../../../shared/hooks/useCardsVirtualiza
 import { ROW_HEIGHT, CONTAINER_HEIGHT } from '../../../shared/virtualization';
 
 import { useSearch } from '../../../shared/hooks/useSearch';
-import { useUrlStringState, useUrlArrayState, useUrlSortState } from '../../../shared/hooks/useUrlState';
+import {
+  useUrlStringState,
+  useUrlArrayState,
+  useUrlSortState,
+} from '../../../shared/hooks/useUrlState';
 import { SearchInput } from '../../../shared/ui/SearchInput';
 import Dropdown from '../../../shared/ui/Dropdown';
 import { SORT_OPTIONS } from '../../../shared/ui/utils';
@@ -30,7 +34,10 @@ import { ClaimCard } from '../../../entities/claim/ui/ClaimCard';
 
 const ClaimsDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useUrlStringState('search');
-  const [selectedStatuses, setSelectedStatuses] = useUrlArrayState('status', []);
+  const [selectedStatuses, setSelectedStatuses] = useUrlArrayState(
+    'status',
+    []
+  );
   const [sortOption, setSortOption] = useUrlSortState('sort', 'created-newest');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [selectedClaim, setSelectedClaim] = useState<FormattedClaim | null>(
@@ -53,7 +60,11 @@ const ClaimsDashboard: React.FC = () => {
     return response.json();
   };
 
-  const { data: claimsData, isLoading, error: queryError } = useQuery({
+  const {
+    data: claimsData,
+    isLoading,
+    error: queryError,
+  } = useQuery({
     queryKey: ['claims'],
     queryFn: fetchClaims,
   });

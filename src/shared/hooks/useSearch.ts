@@ -1,11 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Claim } from '../../entities/claim/types';
 
-export const useSearch = (claims: Claim[], searchTerm?: string, delay: number = 300) => {
+export const useSearch = (
+  claims: Claim[],
+  searchTerm?: string,
+  delay: number = 300
+) => {
   const [internalSearchTerm, setInternalSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const actualSearchTerm = searchTerm !== undefined ? searchTerm : internalSearchTerm;
+  const actualSearchTerm =
+    searchTerm !== undefined ? searchTerm : internalSearchTerm;
 
   // Debounce the search term
   useEffect(() => {

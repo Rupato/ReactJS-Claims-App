@@ -7,7 +7,8 @@ export function useUrlStringState(key: string, defaultValue: string = '') {
   const value = searchParams.get(key) || defaultValue;
 
   const updateValue = (newValue: string | ((prev: string) => string)) => {
-    const actualValue = typeof newValue === 'function' ? newValue(value) : newValue;
+    const actualValue =
+      typeof newValue === 'function' ? newValue(value) : newValue;
 
     const params = new URLSearchParams(searchParams.toString());
 
@@ -38,7 +39,10 @@ export function useUrlArrayState(key: string, defaultValue: string[] = []) {
       const separators = [';', '|', ','];
       for (const sep of separators) {
         if (paramValue.includes(sep)) {
-          return paramValue.split(sep).map((s: string) => s.trim()).filter((s: string) => s !== '');
+          return paramValue
+            .split(sep)
+            .map((s: string) => s.trim())
+            .filter((s: string) => s !== '');
         }
       }
       return [paramValue];
@@ -48,7 +52,8 @@ export function useUrlArrayState(key: string, defaultValue: string[] = []) {
   })();
 
   const updateValue = (newValue: string[] | ((prev: string[]) => string[])) => {
-    const actualValue = typeof newValue === 'function' ? newValue(value) : newValue;
+    const actualValue =
+      typeof newValue === 'function' ? newValue(value) : newValue;
 
     const params = new URLSearchParams(searchParams.toString());
     params.delete(key);
@@ -72,7 +77,8 @@ export function useUrlSortState(key: string, defaultValue: string) {
   const value = searchParams.get(key) || defaultValue;
 
   const updateValue = (newValue: string | ((prev: string) => string)) => {
-    const actualValue = typeof newValue === 'function' ? newValue(value) : newValue;
+    const actualValue =
+      typeof newValue === 'function' ? newValue(value) : newValue;
 
     const params = new URLSearchParams(searchParams.toString());
 
