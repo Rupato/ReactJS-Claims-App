@@ -120,6 +120,31 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     }
   };
 
+  // Currency formatting on blur
+  const handleAmountBlur = () => {
+    const value = formValues.amount;
+    if (value && !isNaN(parseFloat(value))) {
+      const num = parseFloat(value);
+      const formatted = num.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      setValue('amount', formatted);
+    }
+  };
+
+  const handleProcessingFeeBlur = () => {
+    const value = formValues.processingFee;
+    if (value && !isNaN(parseFloat(value))) {
+      const num = parseFloat(value);
+      const formatted = num.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      setValue('processingFee', formatted);
+    }
+  };
+
   // Handle form submission with React Hook Form
   const onSubmit = (data: CreateClaimFormData) => {
     createClaimMutation.mutate({
@@ -260,7 +285,15 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                               ? {
                                   onBlur: handlePolicyBlur,
                                 }
-                              : {}
+                              : field.name === 'amount'
+                                ? {
+                                    onBlur: handleAmountBlur,
+                                  }
+                                : field.name === 'processingFee'
+                                  ? {
+                                      onBlur: handleProcessingFeeBlur,
+                                    }
+                                  : {}
                           )}
                         />
                       )}
