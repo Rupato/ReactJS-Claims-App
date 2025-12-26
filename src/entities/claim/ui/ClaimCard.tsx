@@ -42,15 +42,15 @@ const ClaimCard = React.memo(
             : undefined
         }
       >
-        <header className="flex items-start justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">
+        <header className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4 space-y-2 sm:space-y-0">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg font-semibold text-gray-900 truncate">
               {claim.number}
             </h3>
-            <p className="text-sm text-gray-600">{claim.holder}</p>
+            <p className="text-sm text-gray-600 truncate">{claim.holder}</p>
           </div>
           <span
-            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColorClasses(
+            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full self-start sm:self-auto ${getStatusColorClasses(
               claim.status
             )}`}
             aria-label={`Status: ${claim.status}`}
@@ -59,7 +59,7 @@ const ClaimCard = React.memo(
           </span>
         </header>
 
-        <div className="grid grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
           <div>
             <dt className="text-xs font-medium text-gray-500 uppercase">
               Policy Number

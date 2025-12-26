@@ -47,6 +47,7 @@ const ClaimsDashboard: React.FC = () => {
     'created-newest'
   );
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [isMobile, setIsMobile] = React.useState(false);
   const [selectedClaim, setSelectedClaim] = useState<FormattedClaim | null>(
     null
   );
@@ -61,7 +62,7 @@ const ClaimsDashboard: React.FC = () => {
 
   const fetchClaims = async (): Promise<Claim[]> => {
     const response = await fetch(
-      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}?_limit=200`
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}`
     );
     if (!response.ok) throw new Error('Failed to fetch claims');
     return response.json();
@@ -125,6 +126,18 @@ const ClaimsDashboard: React.FC = () => {
     value: status,
     label: status,
   }));
+
+  // Mobile detection for responsive behavior
+  React.useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
 
   const handleRowSelect = useCallback((claim: FormattedClaim) => {
     setSelectedClaim(claim);
@@ -317,7 +330,7 @@ const ClaimsDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
                   Claims Dashboard
@@ -326,7 +339,7 @@ const ClaimsDashboard: React.FC = () => {
                   View and manage insurance claims
                 </p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col md:flex-row flex items-center gap-4">
                 <SearchInput
                   value={searchTerm}
                   onChange={setSearchTerm}
@@ -571,10 +584,17 @@ const ClaimsDashboard: React.FC = () => {
                     rows of {formattedClaims.length} total claims. Scroll to
                     dynamically load/unload data for optimal performance.
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Rendered range: {startIndex + 1}-
-                    {Math.min(endIndex, formattedClaims.length)}
-                  </p>
+                  {!isMobile && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Rendered range: {startIndex + 1}-
+                      {Math.min(endIndex, formattedClaims.length)}
+                    </p>
+                  )}
+                  {isMobile && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Touch and scroll to load more claims
+                    </p>
+                  )}
                 </div>
               </div>
             </>
@@ -654,10 +674,17 @@ const ClaimsDashboard: React.FC = () => {
                     Scroll to dynamically load/unload data for optimal
                     performance.
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Rendered range: {cardStartIndex + 1}-
-                    {Math.min(cardEndIndex, formattedClaims.length)}
-                  </p>
+                  {!isMobile && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Rendered range: {cardStartIndex + 1}-
+                      {Math.min(cardEndIndex, formattedClaims.length)}
+                    </p>
+                  )}
+                  {isMobile && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Touch and scroll to load more claims
+                    </p>
+                  )}
                 </div>
               </div>
             </>
