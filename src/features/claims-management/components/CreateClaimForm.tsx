@@ -33,7 +33,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     formState: { errors, isValid },
   } = useForm<CreateClaimFormData>({
     resolver: yupResolver(createClaimValidationSchema),
-    mode: 'onBlur', // Validate on blur
+    mode: 'onChange', // Validate on change for immediate feedback
   });
 
   // Watch form values for smart behaviors using useWatch
