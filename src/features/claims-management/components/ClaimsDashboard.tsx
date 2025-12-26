@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Claim, FormattedClaim } from '../../../entities/claim/types';
 import { API_CONFIG } from '../../../shared/constants';
 import {
@@ -28,6 +28,10 @@ const ClaimsDashboard: React.FC = () => {
   const [selectedClaim, setSelectedClaim] = useState<FormattedClaim | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+
+  // Refs for table navigation
+  const containerRef = useRef<HTMLDivElement>(null);
+  const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
 
   useEffect(() => {
     const fetchClaims = async () => {
@@ -120,10 +124,9 @@ const ClaimsDashboard: React.FC = () => {
           e.key === 'ArrowRight')
       ) {
         e.preventDefault();
-        // Focus the table container and select first row
-        const tableContainer = document.querySelector('[data-table-container]');
-        if (tableContainer) {
-          (tableContainer as HTMLElement).focus();
+        // Focus the container and select first row
+        if (containerRef.current) {
+          containerRef.current.focus();
           setSelectedIndex(startIndex);
         }
       }
@@ -136,44 +139,75 @@ const ClaimsDashboard: React.FC = () => {
     };
   }, [selectedIndex, startIndex]);
 
-  // Keyboard navigation handler
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    const visibleClaims = formattedClaims.slice(startIndex, endIndex);
-    const currentVisibleIndex = selectedIndex - startIndex;
-
-    switch (e.key) {
-      case 'ArrowDown':
-        e.preventDefault();
-        if (selectedIndex === -1) {
-          // No row selected, select the first visible row
-          setSelectedIndex(startIndex);
-        } else if (currentVisibleIndex < visibleClaims.length - 1) {
-          setSelectedIndex((prev) => prev + 1);
-        } else if (endIndex < formattedClaims.length) {
-          // Scroll down to show more rows
-          // This would need scroll handling
-          setSelectedIndex(endIndex);
+  // Focus on the selected row when selectedIndex changes
+  useEffect(() => {
+    if (selectedIndex >= 0 && selectedIndex < formattedClaims.length) {
+      const visibleIndex = selectedIndex - startIndex;
+      if (visibleIndex >= 0 && visibleIndex < rowRefs.current.length) {
+        const rowElement = rowRefs.current[visibleIndex];
+        if (rowElement) {
+          rowElement.focus();
+          // Ensure the row is visible in the scroll container
+          rowElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+          });
         }
-        break;
-      case 'ArrowUp':
-        e.preventDefault();
-        if (selectedIndex === -1) {
-          // No row selected, select the first visible row
-          setSelectedIndex(startIndex);
-        } else if (currentVisibleIndex > 0) {
-          setSelectedIndex((prev) => prev - 1);
-        } else if (startIndex > 0) {
-          // Scroll up to show more rows
-          setSelectedIndex(startIndex - 1);
-        }
-        break;
-      case 'Enter':
-        if (selectedIndex >= 0 && selectedIndex < formattedClaims.length) {
-          handleRowSelect(formattedClaims[selectedIndex]);
-        }
-        break;
+      }
     }
-  };
+  }, [selectedIndex, startIndex, formattedClaims.length]);
+
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      const visibleClaims = formattedClaims.slice(startIndex, endIndex);
+      const currentVisibleIndex = selectedIndex - startIndex;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          if (selectedIndex === -1) {
+            // No row selected, select the first visible row
+            setSelectedIndex(startIndex);
+          } else if (currentVisibleIndex < visibleClaims.length - 1) {
+            setSelectedIndex((prev) => prev + 1);
+          } else if (endIndex < formattedClaims.length) {
+            // Scroll down to show more rows
+            containerRef.current?.scrollBy(0, rowHeight);
+            // Move to the newly visible row
+            setSelectedIndex(endIndex);
+          }
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          if (selectedIndex === -1) {
+            // No row selected, select the first visible row
+            setSelectedIndex(startIndex);
+          } else if (currentVisibleIndex > 0) {
+            setSelectedIndex((prev) => prev - 1);
+          } else if (startIndex > 0) {
+            // Scroll up to show more rows
+            containerRef.current?.scrollBy(0, -rowHeight);
+            // Move to the newly visible row
+            setSelectedIndex(startIndex - 1);
+          }
+          break;
+        case 'Enter':
+          if (selectedIndex >= 0 && selectedIndex < formattedClaims.length) {
+            handleRowSelect(formattedClaims[selectedIndex]);
+          }
+          break;
+      }
+    },
+    [
+      selectedIndex,
+      startIndex,
+      endIndex,
+      formattedClaims,
+      handleRowSelect,
+      rowHeight,
+    ]
+  );
 
   //if (isLoading) return <div className="text-center py-8">Loading...</div>;
   if (error)
@@ -302,6 +336,7 @@ const ClaimsDashboard: React.FC = () => {
             <>
               {/* Virtualized Table */}
               <div
+                ref={containerRef}
                 className="overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
                 style={{ height: CONTAINER_HEIGHT }}
                 onScroll={handleScroll}
@@ -353,11 +388,19 @@ const ClaimsDashboard: React.FC = () => {
                     {/* Visible rows only */}
                     {formattedClaims
                       .slice(startIndex, endIndex)
-                      .map((claim) => (
+                      .map((claim, index) => (
                         <tr
                           key={claim.id}
-                          className="hover:bg-gray-50 cursor-pointer"
+                          ref={(el) => {
+                            rowRefs.current[index] = el;
+                          }}
+                          className={`hover:bg-gray-50 cursor-pointer ${
+                            selectedIndex === startIndex + index
+                              ? 'bg-blue-50 ring-2 ring-blue-500 ring-inset'
+                              : ''
+                          }`}
                           onClick={() => handleRowSelect(claim)}
+                          tabIndex={-1}
                         >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {claim.number}
