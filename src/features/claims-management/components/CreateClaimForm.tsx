@@ -281,36 +281,38 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                           {...register(field.name)}
                         />
                       ) : field.type === 'datepicker' ? (
-                        <DatePicker
-                          selected={
-                            formValues.incidentDate
-                              ? new Date(formValues.incidentDate)
-                              : null
-                          }
-                          onChange={(date: Date | null) => {
-                            const dateString = date
-                              ? date.toISOString().split('T')[0]
-                              : '';
-                            setValue('incidentDate', dateString, {
-                              shouldValidate: true,
-                            });
-                          }}
-                          onBlur={() => {
-                            // Trigger validation on blur for empty date field
-                            setValue(
-                              'incidentDate',
-                              formValues.incidentDate || '',
-                              {
+                        <div className="relative z-50">
+                          <DatePicker
+                            selected={
+                              formValues.incidentDate
+                                ? new Date(formValues.incidentDate)
+                                : null
+                            }
+                            onChange={(date: Date | null) => {
+                              const dateString = date
+                                ? date.toISOString().split('T')[0]
+                                : '';
+                              setValue('incidentDate', dateString, {
                                 shouldValidate: true,
-                              }
-                            );
-                          }}
-                          minDate={new Date(sixMonthsAgo)}
-                          maxDate={new Date(yesterday)}
-                          dateFormat="MMM dd, yyyy"
-                          placeholderText={field.placeholder}
-                          className={inputClasses}
-                        />
+                              });
+                            }}
+                            onBlur={() => {
+                              // Trigger validation on blur for empty date field
+                              setValue(
+                                'incidentDate',
+                                formValues.incidentDate || '',
+                                {
+                                  shouldValidate: true,
+                                }
+                              );
+                            }}
+                            minDate={new Date(sixMonthsAgo)}
+                            maxDate={new Date(yesterday)}
+                            dateFormat="MMM dd, yyyy"
+                            placeholderText={field.placeholder}
+                            className={inputClasses}
+                          />
+                        </div>
                       ) : (
                         <input
                           type={
