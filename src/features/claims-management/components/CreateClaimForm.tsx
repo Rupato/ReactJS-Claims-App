@@ -22,6 +22,8 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
   // Component state
   const [isHolderAutoFilled, setIsHolderAutoFilled] = useState(false);
   const [shouldLookupPolicy, setShouldLookupPolicy] = useState(false);
+  const [displayAmount, setDisplayAmount] = useState('');
+  const [displayProcessingFee, setDisplayProcessingFee] = useState('');
 
   // Form management with validation
   const {
@@ -120,7 +122,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     }
   };
 
-  // Currency formatting on blur
+  // Currency formatting on blur - update display values
   const handleAmountBlur = () => {
     const value = formValues.amount;
     if (value && value.trim() !== '') {
@@ -134,8 +136,12 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        setValue('amount', formatted, { shouldValidate: false });
+        setDisplayAmount(formatted);
+        // Keep the clean number in form state for validation
+        setValue('amount', cleanValue, { shouldValidate: false });
       }
+    } else {
+      setDisplayAmount('');
     }
   };
 
@@ -152,8 +158,12 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        setValue('processingFee', formatted, { shouldValidate: false });
+        setDisplayProcessingFee(formatted);
+        // Keep the clean number in form state for validation
+        setValue('processingFee', cleanValue, { shouldValidate: false });
       }
+    } else {
+      setDisplayProcessingFee('');
     }
   };
 
@@ -291,6 +301,15 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                           max={field.max}
                           className={inputClasses}
                           placeholder={field.placeholder}
+                          value={
+                            field.name === 'amount'
+                              ? displayAmount || formValues.amount || ''
+                              : field.name === 'processingFee'
+                                ? displayProcessingFee ||
+                                  formValues.processingFee ||
+                                  ''
+                                : undefined
+                          }
                           {...register(
                             field.name,
                             field.name === 'policyNumber'
@@ -300,10 +319,18 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                               : field.name === 'amount'
                                 ? {
                                     onBlur: handleAmountBlur,
+                                    onChange: (e) => {
+                                      // Update display value as user types
+                                      setDisplayAmount(e.target.value);
+                                    },
                                   }
                                 : field.name === 'processingFee'
                                   ? {
                                       onBlur: handleProcessingFeeBlur,
+                                      onChange: (e) => {
+                                        // Update display value as user types
+                                        setDisplayProcessingFee(e.target.value);
+                                      },
                                     }
                                   : {}
                           )}
