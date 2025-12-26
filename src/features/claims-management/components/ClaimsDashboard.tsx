@@ -123,7 +123,7 @@ const ClaimsDashboard: React.FC = () => {
                 <div className="flex bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('table')}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-6 py-3 rounded-md text-sm font-medium transition-colors min-w-[150px] ${
                       viewMode === 'table'
                         ? 'bg-white text-gray-900 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
@@ -133,7 +133,7 @@ const ClaimsDashboard: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setViewMode('cards')}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-6 py-3 rounded-md text-sm font-medium transition-colors min-w-[150px] ${
                       viewMode === 'cards'
                         ? 'bg-white text-gray-900 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
