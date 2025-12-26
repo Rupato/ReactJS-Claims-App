@@ -137,17 +137,10 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     const value = formValues.amount;
     if (value && value.trim() !== '') {
       const num = parseFloat(value);
-
-      // Only format if it's a valid number
       if (!isNaN(num) && num >= 0) {
-        const formatted = num.toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-        // Set the formatted value for display
-        setValue('amount', formatted, { shouldValidate: false });
+        // Ensure proper decimal formatting without commas
+        setValue('amount', num.toFixed(2), { shouldValidate: false });
       }
-      // If invalid, keep the current value (don't clear it)
     }
   };
 
@@ -165,15 +158,9 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     const value = formValues.processingFee;
     if (value && value.trim() !== '') {
       const num = parseFloat(value);
-
-      // Only format if it's a valid number
-      if (!isNaN(num)) {
-        const formatted = num.toLocaleString('en-US', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        });
-        // Set the formatted value for display
-        setValue('processingFee', formatted);
+      if (!isNaN(num) && num >= 0) {
+        // Ensure proper decimal formatting without commas
+        setValue('processingFee', num.toFixed(2), { shouldValidate: false });
       }
     }
   };
