@@ -24,6 +24,33 @@ export function useUrlStringState(key: string, defaultValue: string = '') {
   return [value, updateValue] as const;
 }
 
+export function useUrlTypedState<T extends string>(
+  key: string,
+  defaultValue: T
+) {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const value = (searchParams.get(key) || defaultValue) as T;
+
+  const updateValue = (newValue: T | ((prev: T) => T)) => {
+    const actualValue =
+      typeof newValue === 'function' ? newValue(value) : newValue;
+
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (actualValue === defaultValue) {
+      params.delete(key);
+    } else {
+      params.set(key, actualValue);
+    }
+
+    navigate(`?${params.toString()}`, { replace: true });
+  };
+
+  return [value, updateValue] as const;
+}
+
 export function useUrlArrayState(key: string, defaultValue: string[] = []) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();

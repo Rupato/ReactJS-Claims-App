@@ -24,7 +24,7 @@ import { useSearch } from '../../../shared/hooks/useSearch';
 import {
   useUrlStringState,
   useUrlArrayState,
-  useUrlSortState,
+  useUrlTypedState,
 } from '../../../shared/hooks/useUrlState';
 import { SearchInput } from '../../../shared/ui/SearchInput';
 import Dropdown from '../../../shared/ui/Dropdown';
@@ -38,7 +38,7 @@ const ClaimsDashboard: React.FC = () => {
     'status',
     []
   );
-  const [sortOption, setSortOption] = useUrlSortState('sort', 'created-newest');
+  const [sortOption, setSortOption] = useUrlTypedState<SortOption>('sort', 'created-newest');
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [selectedClaim, setSelectedClaim] = useState<FormattedClaim | null>(
     null
