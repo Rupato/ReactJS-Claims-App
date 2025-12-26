@@ -23,9 +23,12 @@
   "dependencies": {
     "@rsbuild/core": "^1.6.15",
     "@rsbuild/plugin-react": "^1.4.2",
+    "@tanstack/react-query": "^5.90.12",
+    "@tanstack/react-query-devtools": "^5.91.1",
     "date-fns": "^4.1.0",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "react-router-dom": "^7.11.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

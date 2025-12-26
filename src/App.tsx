@@ -1,8 +1,12 @@
+import { BrowserRouter } from 'react-router-dom';
 import ClaimsDashboard from './features/claims-management/components/ClaimsDashboard';
 
 function App() {
-  console.log('app');
-  return <ClaimsDashboard />;
+  return (
+    <BrowserRouter>
+      <ClaimsDashboard />
+    </BrowserRouter>
+  );
 }
 
 export default App;

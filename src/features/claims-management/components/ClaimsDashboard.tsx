@@ -5,6 +5,7 @@ import React, {
   useRef,
   useCallback,
 } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Claim, FormattedClaim } from '../../../entities/claim/types';
 import { API_CONFIG } from '../../../shared/constants';
 import {
@@ -20,6 +21,11 @@ import { useCardsVirtualization } from '../../../shared/hooks/useCardsVirtualiza
 import { ROW_HEIGHT, CONTAINER_HEIGHT } from '../../../shared/virtualization';
 
 import { useSearch } from '../../../shared/hooks/useSearch';
+import {
+  useUrlStringState,
+  useUrlArrayState,
+  useUrlTypedState,
+} from '../../../shared/hooks/useUrlState';
 import { SearchInput } from '../../../shared/ui/SearchInput';
 import Dropdown from '../../../shared/ui/Dropdown';
 import { SORT_OPTIONS } from '../../../shared/ui/utils';
@@ -27,11 +33,16 @@ import { ClaimDetailsModal } from './ClaimDetailsModal';
 import { ClaimCard } from '../../../entities/claim/ui/ClaimCard';
 
 const ClaimsDashboard: React.FC = () => {
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-  const [sortOption, setSortOption] = useState<SortOption>('created-newest');
+  const [searchTerm, setSearchTerm] = useUrlStringState('search');
+  const [selectedStatuses, setSelectedStatuses] = useUrlArrayState(
+    'status',
+    []
+  );
+  const [sortOption, setSortOption] = useUrlTypedState<SortOption>(
+    'sort',
+    'created-newest'
+  );
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [claims, setClaims] = useState<Claim[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [selectedClaim, setSelectedClaim] = useState<FormattedClaim | null>(
     null
   );
@@ -44,25 +55,25 @@ const ClaimsDashboard: React.FC = () => {
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const fetchClaims = async () => {
-      try {
-        setError(null);
-        const response = await fetch(
-          `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}?_limit=200`
-        );
-        if (!response.ok) throw new Error('Failed to fetch claims');
-        const data = await response.json();
-        setClaims(data);
-      } catch (err) {
-        console.error('Failed to fetch claims:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        setClaims([]);
-      }
-    };
+  const fetchClaims = async (): Promise<Claim[]> => {
+    const response = await fetch(
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}?_limit=200`
+    );
+    if (!response.ok) throw new Error('Failed to fetch claims');
+    return response.json();
+  };
 
-    fetchClaims();
-  }, []);
+  const {
+    data: claimsData,
+    isLoading,
+    error: queryError,
+  } = useQuery({
+    queryKey: ['claims'],
+    queryFn: fetchClaims,
+  });
+
+  const claims = useMemo(() => claimsData || [], [claimsData]);
+  const error = queryError?.message || null;
 
   const availableStatuses = useMemo(() => {
     const statusSet = new Set(claims.map((claim) => claim.status));
@@ -79,8 +90,7 @@ const ClaimsDashboard: React.FC = () => {
   }, [statusFilteredClaims, sortOption]);
 
   // Search functionality (applied after sorting)
-  const { filteredClaims, isSearching, searchTerm, setSearchTerm } =
-    useSearch(sortedClaims);
+  const { filteredClaims, isSearching } = useSearch(sortedClaims, searchTerm);
 
   const hasActiveFilters = selectedStatuses.length > 0 || !!searchTerm;
   const rowHeight = hasActiveFilters ? 48 : ROW_HEIGHT;
@@ -288,10 +298,51 @@ const ClaimsDashboard: React.FC = () => {
     ]
   );
 
-  //if (isLoading) return <div className="text-center py-8">Loading...</div>;
+  if (isLoading)
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-6 py-4 border-b">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Claims Dashboard
+                </h1>
+                <p className="text-gray-600">
+                  View and manage insurance claims
+                </p>
+              </div>
+            </div>
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-sm text-gray-600">Loading claims...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
   if (error)
     return (
-      <div className="text-center py-8 text-red-500">Error loading claims</div>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-6 py-4 border-b">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Claims Dashboard
+                </h1>
+                <p className="text-gray-600">
+                  View and manage insurance claims
+                </p>
+              </div>
+            </div>
+            <div className="text-center py-8 text-red-500">
+              Error loading claims: {error}
+            </div>
+          </div>
+        </div>
+      </div>
     );
 
   return (
