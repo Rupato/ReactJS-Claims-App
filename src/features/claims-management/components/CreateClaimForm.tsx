@@ -33,7 +33,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     formState: { errors, isValid },
   } = useForm<CreateClaimFormData>({
     resolver: yupResolver(createClaimValidationSchema),
-    mode: 'onChange', // Validate on change for immediate feedback
+    mode: 'onBlur', // Validate on blur for better UX
   });
 
   // Watch form values for smart behaviors using useWatch
@@ -294,6 +294,16 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                             setValue('incidentDate', dateString, {
                               shouldValidate: true,
                             });
+                          }}
+                          onBlur={() => {
+                            // Trigger validation on blur for empty date field
+                            setValue(
+                              'incidentDate',
+                              formValues.incidentDate || '',
+                              {
+                                shouldValidate: true,
+                              }
+                            );
                           }}
                           minDate={new Date(sixMonthsAgo)}
                           maxDate={new Date(yesterday)}
