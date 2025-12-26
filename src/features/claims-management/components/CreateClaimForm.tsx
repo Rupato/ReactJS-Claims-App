@@ -138,8 +138,8 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
         });
         console.log({ formatted, cleanValue, num });
         setDisplayAmount(formatted);
-        // Keep the clean number in form state for validation
-        setValue('amount', cleanValue, { shouldValidate: false });
+        // Keep the rounded number in form state for validation
+        setValue('amount', num.toFixed(2), { shouldValidate: false });
       }
     } else {
       setDisplayAmount('');
@@ -160,8 +160,8 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
           maximumFractionDigits: 2,
         });
         setDisplayProcessingFee(formatted);
-        // Keep the clean number in form state for validation
-        setValue('processingFee', cleanValue, { shouldValidate: false });
+        // Keep the rounded number in form state for validation
+        setValue('processingFee', num.toFixed(2), { shouldValidate: false });
       }
     } else {
       setDisplayProcessingFee('');
