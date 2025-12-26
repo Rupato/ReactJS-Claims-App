@@ -18,14 +18,6 @@ export const UI_CONSTANTS = {
   DROPDOWN_Z_INDEX: 30,
 } as const;
 
-// Form Validation Constants
-export const VALIDATION_CONSTANTS = {
-  POLICY_NUMBER_PATTERN: /^TL-\d{5}$/,
-  MAX_CLAIM_AMOUNT: 10000,
-  MIN_DESCRIPTION_LENGTH: 10,
-  DATE_RANGE_MONTHS: 6,
-} as const;
-
 // Status Configuration
 export const STATUS_CONFIG = {
   COLORS: {
@@ -36,4 +28,12 @@ export const STATUS_CONFIG = {
     Completed: 'bg-purple-100 text-purple-800',
   },
   DEFAULT: 'bg-gray-100 text-gray-800',
+} as const;
+
+// Form Validation Constants
+export const VALIDATION_CONSTANTS = {
+  POLICY_NUMBER_PATTERN: /^TL-\d{5}$/,
+  MAX_CLAIM_AMOUNT: 10000,
+  MIN_DESCRIPTION_LENGTH: 10,
+  DATE_RANGE_MONTHS: 6,
 } as const;

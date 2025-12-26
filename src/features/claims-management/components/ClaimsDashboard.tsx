@@ -5,6 +5,7 @@ import React, {
   useRef,
   useCallback,
 } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Claim, FormattedClaim } from '../../../entities/claim/types';
 import { API_CONFIG } from '../../../shared/constants';
@@ -35,6 +36,7 @@ import { ClaimDetailsModal } from './ClaimDetailsModal';
 import { ClaimCard } from '../../../entities/claim/ui/ClaimCard';
 
 const ClaimsDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useUrlStringState('search');
   const [selectedStatuses, setSelectedStatuses] = useUrlArrayState(
     'status',
@@ -45,6 +47,7 @@ const ClaimsDashboard: React.FC = () => {
     'created-newest'
   );
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [isMobile, setIsMobile] = React.useState(false);
   const [selectedClaim, setSelectedClaim] = useState<FormattedClaim | null>(
     null
   );
@@ -59,7 +62,7 @@ const ClaimsDashboard: React.FC = () => {
 
   const fetchClaims = async (): Promise<Claim[]> => {
     const response = await fetch(
-      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}?_limit=200`
+      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}`
     );
     if (!response.ok) throw new Error('Failed to fetch claims');
     return response.json();
@@ -123,6 +126,18 @@ const ClaimsDashboard: React.FC = () => {
     value: status,
     label: status,
   }));
+
+  // Mobile detection for responsive behavior
+  React.useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 640); // sm breakpoint
+    };
+
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
 
   const handleRowSelect = useCallback((claim: FormattedClaim) => {
     setSelectedClaim(claim);
@@ -315,7 +330,7 @@ const ClaimsDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4">
         <div className="bg-white shadow rounded-lg">
           <div className="px-6 py-4 border-b">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
                   Claims Dashboard
@@ -324,12 +339,31 @@ const ClaimsDashboard: React.FC = () => {
                   View and manage insurance claims
                 </p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col md:flex-row flex items-center gap-4">
                 <SearchInput
                   value={searchTerm}
                   onChange={setSearchTerm}
                   isSearching={isSearching}
                 />
+                <button
+                  onClick={() => navigate('/create')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <svg
+                    className="mr-2 h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  Create Claim
+                </button>
                 <div className="flex bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('table')}
@@ -550,10 +584,17 @@ const ClaimsDashboard: React.FC = () => {
                     rows of {formattedClaims.length} total claims. Scroll to
                     dynamically load/unload data for optimal performance.
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Rendered range: {startIndex + 1}-
-                    {Math.min(endIndex, formattedClaims.length)}
-                  </p>
+                  {!isMobile && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Rendered range: {startIndex + 1}-
+                      {Math.min(endIndex, formattedClaims.length)}
+                    </p>
+                  )}
+                  {isMobile && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Touch and scroll to load more claims
+                    </p>
+                  )}
                 </div>
               </div>
             </>
@@ -633,10 +674,17 @@ const ClaimsDashboard: React.FC = () => {
                     Scroll to dynamically load/unload data for optimal
                     performance.
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Rendered range: {cardStartIndex + 1}-
-                    {Math.min(cardEndIndex, formattedClaims.length)}
-                  </p>
+                  {!isMobile && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Rendered range: {cardStartIndex + 1}-
+                      {Math.min(cardEndIndex, formattedClaims.length)}
+                    </p>
+                  )}
+                  {isMobile && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Touch and scroll to load more claims
+                    </p>
+                  )}
                 </div>
               </div>
             </>
