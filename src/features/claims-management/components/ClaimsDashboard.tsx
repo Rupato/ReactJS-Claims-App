@@ -12,7 +12,7 @@ import { getStatusColorClasses } from '../../../shared/utils/status';
 import { useTableVirtualization } from '../../../shared/hooks/useTableVirtualization';
 import { useCardsVirtualization } from '../../../shared/hooks/useCardsVirtualization';
 import { ROW_HEIGHT, CONTAINER_HEIGHT } from '../../../shared/virtualization';
-import { CardsView } from '../../../widgets/claims-table/CardsView';
+
 import { useSearch } from '../../../shared/hooks/useSearch';
 import { SearchInput } from '../../../shared/ui/SearchInput';
 import Dropdown from '../../../shared/ui/Dropdown';
@@ -105,10 +105,10 @@ const ClaimsDashboard: React.FC = () => {
     label: status,
   }));
 
-  const handleRowSelect = (claim: FormattedClaim) => {
+  const handleRowSelect = useCallback((claim: FormattedClaim) => {
     setSelectedClaim(claim);
     setIsModalOpen(true);
-  };
+  }, []);
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -530,80 +530,82 @@ const ClaimsDashboard: React.FC = () => {
               </div>
             </>
           ) : (
-            <div
-              ref={cardsContainerRef}
-              className="overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
-              style={{ height: CONTAINER_HEIGHT }}
-              onScroll={handleCardsScroll}
-              onKeyDown={handleCardKeyDown}
-              tabIndex={viewMode === 'cards' ? 0 : -1}
-              data-cards-container
-              role="region"
-              aria-labelledby="cards-keyboard-instructions"
-            >
-              <div id="cards-keyboard-instructions" className="sr-only">
-                Use ↑↓←→ arrow keys to navigate cards, Enter to open claim details
-              </div>
-              <div className="p-6">
-                <h3 id="cards-keyboard-label" className="sr-only">
-                  Insurance Claims Cards
-                </h3>
-                {/* Top spacer for cards virtualization */}
-                <div
-                  style={{
-                    height: Math.floor(cardStartIndex / cardsPerRow) * (hasActiveFilters ? 200 : 240),
-                  }}
-                />
-                <div
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                  role="grid"
-                  aria-labelledby="cards-keyboard-label"
-                >
-                  {formattedClaims
-                    .slice(cardStartIndex, cardEndIndex)
-                    .map((claim, index) => (
-                      <div
-                        key={claim.id}
-                        className={`${
-                          selectedCardIndex === cardStartIndex + index
-                            ? 'ring-2 ring-blue-500 ring-offset-2'
-                            : ''
-                        }`}
-                      >
-                        <ClaimCard
-                          claim={claim}
-                          onCardClick={handleRowSelect}
-                          isSelected={selectedCardIndex === cardStartIndex + index}
-                        />
-                      </div>
-                    ))}
+            <>
+              <div
+                ref={cardsContainerRef}
+                className="overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
+                style={{ height: CONTAINER_HEIGHT }}
+                onScroll={handleCardsScroll}
+                onKeyDown={handleCardKeyDown}
+                tabIndex={viewMode === 'cards' ? 0 : -1}
+                data-cards-container
+                role="region"
+                aria-labelledby="cards-keyboard-instructions"
+              >
+                <div id="cards-keyboard-instructions" className="sr-only">
+                  Use ↑↓←→ arrow keys to navigate cards, Enter to open claim details
                 </div>
-                {/* Bottom spacer for cards virtualization */}
-                <div
-                  style={{
-                    height:
-                      Math.floor(
-                        (formattedClaims.length - cardEndIndex) / cardsPerRow
-                      ) * (hasActiveFilters ? 200 : 240),
-                  }}
-                />
+                <div className="p-6">
+                  <h3 id="cards-keyboard-label" className="sr-only">
+                    Insurance Claims Cards
+                  </h3>
+                  {/* Top spacer for cards virtualization */}
+                  <div
+                    style={{
+                      height: Math.floor(cardStartIndex / cardsPerRow) * (hasActiveFilters ? 200 : 240),
+                    }}
+                  />
+                  <div
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    role="grid"
+                    aria-labelledby="cards-keyboard-label"
+                  >
+                    {formattedClaims
+                      .slice(cardStartIndex, cardEndIndex)
+                      .map((claim, index) => (
+                        <div
+                          key={claim.id}
+                          className={`${
+                            selectedCardIndex === cardStartIndex + index
+                              ? 'ring-2 ring-blue-500 ring-offset-2'
+                              : ''
+                          }`}
+                        >
+                          <ClaimCard
+                            claim={claim}
+                            onCardClick={handleRowSelect}
+                            isSelected={selectedCardIndex === cardStartIndex + index}
+                          />
+                        </div>
+                      ))}
+                  </div>
+                  {/* Bottom spacer for cards virtualization */}
+                  <div
+                    style={{
+                      height:
+                        Math.floor(
+                          (formattedClaims.length - cardEndIndex) / cardsPerRow
+                        ) * (hasActiveFilters ? 200 : 240),
+                    }}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Performance info for cards */}
-            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-              <div>
-                <p className="text-sm text-gray-500">
-                  Virtualized cards: Showing {cardEndIndex - cardStartIndex} rendered
-                  cards of {formattedClaims.length} total claims. Scroll to
-                  dynamically load/unload data for optimal performance.
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Rendered range: {cardStartIndex + 1}-
-                  {Math.min(cardEndIndex, formattedClaims.length)}
-                </p>
+              {/* Performance info for cards */}
+              <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <div>
+                  <p className="text-sm text-gray-500">
+                    Virtualized cards: Showing {cardEndIndex - cardStartIndex} rendered
+                    cards of {formattedClaims.length} total claims. Scroll to
+                    dynamically load/unload data for optimal performance.
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Rendered range: {cardStartIndex + 1}-
+                    {Math.min(cardEndIndex, formattedClaims.length)}
+                  </p>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {formattedClaims.length === 0 && (
