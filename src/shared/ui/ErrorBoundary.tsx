@@ -86,7 +86,7 @@ const DefaultErrorFallback = ({
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
         <div className="flex justify-center mb-4">
           <span className="text-6xl" role="img" aria-label="Warning">
-            ⚠️
+            !
           </span>
         </div>
 

@@ -33,28 +33,28 @@ const getErrorDisplay = (category: ErrorCategory) => {
   switch (category) {
     case 'network':
       return {
-        icon: '📡',
+        icon: '!',
         title: 'Connection Problem',
         message:
           'Unable to connect to the server. Please check your internet connection and try again.',
       };
     case 'server':
       return {
-        icon: '🔧',
+        icon: '!',
         title: 'Server Error',
         message:
           'Our servers are experiencing issues. Please try again in a few minutes.',
       };
     case 'auth':
       return {
-        icon: '🔐',
+        icon: '!',
         title: 'Access Denied',
         message:
           "You don't have permission to access this resource. Please contact support if this seems incorrect.",
       };
     default:
       return {
-        icon: '⚠️',
+        icon: '!',
         title: 'Something Went Wrong',
         message:
           'An unexpected error occurred. Please try again or contact support if the problem persists.',
