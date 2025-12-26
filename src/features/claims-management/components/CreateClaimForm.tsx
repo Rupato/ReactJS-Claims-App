@@ -22,8 +22,6 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
   // Component state
   const [isHolderAutoFilled, setIsHolderAutoFilled] = useState(false);
   const [shouldLookupPolicy, setShouldLookupPolicy] = useState(false);
-  const [displayAmount, setDisplayAmount] = useState('');
-  const [displayProcessingFee, setDisplayProcessingFee] = useState('');
 
   // Form management with validation
   const {
@@ -124,13 +122,21 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     }
   };
 
-  // Currency formatting on blur - update display values
+  // Currency formatting handlers
+  const handleAmountFocus = () => {
+    // On focus, ensure we show the raw numeric value for editing
+    const currentValue = formValues.amount;
+    if (currentValue && currentValue.includes(',')) {
+      // Remove formatting for editing
+      const rawValue = currentValue.replace(/,/g, '');
+      setValue('amount', rawValue, { shouldValidate: false });
+    }
+  };
+
   const handleAmountBlur = () => {
     const value = formValues.amount;
     if (value && value.trim() !== '') {
-      // Remove existing commas and parse the number
-      const cleanValue = value.replace(/,/g, '');
-      const num = parseFloat(cleanValue);
+      const num = parseFloat(value);
 
       // Only format if it's a valid number
       if (!isNaN(num)) {
@@ -138,22 +144,26 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        console.log({ formatted, cleanValue, num });
-        setDisplayAmount(formatted);
-        // Keep the rounded number in form state for validation
-        setValue('amount', num.toFixed(2), { shouldValidate: false });
+        // Set the formatted value for display
+        setValue('amount', formatted, { shouldValidate: false });
       }
-    } else {
-      setDisplayAmount('');
+    }
+  };
+
+  const handleProcessingFeeFocus = () => {
+    // On focus, ensure we show the raw numeric value for editing
+    const currentValue = formValues.processingFee;
+    if (currentValue && currentValue.includes(',')) {
+      // Remove formatting for editing
+      const rawValue = currentValue.replace(/,/g, '');
+      setValue('processingFee', rawValue, { shouldValidate: false });
     }
   };
 
   const handleProcessingFeeBlur = () => {
     const value = formValues.processingFee;
     if (value && value.trim() !== '') {
-      // Remove existing commas and parse the number
-      const cleanValue = value.replace(/,/g, '');
-      const num = parseFloat(cleanValue);
+      const num = parseFloat(value);
 
       // Only format if it's a valid number
       if (!isNaN(num)) {
@@ -161,12 +171,9 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
-        setDisplayProcessingFee(formatted);
-        // Keep the rounded number in form state for validation
-        setValue('processingFee', num.toFixed(2), { shouldValidate: false });
+        // Set the formatted value for display
+        setValue('processingFee', formatted, { shouldValidate: false });
       }
-    } else {
-      setDisplayProcessingFee('');
     }
   };
 
@@ -305,13 +312,11 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                           className={inputClasses}
                           placeholder={field.placeholder}
                           readOnly={field.name === 'holder' && isAutoFilled}
-                          value={
+                          onFocus={
                             field.name === 'amount'
-                              ? displayAmount || formValues.amount || ''
+                              ? handleAmountFocus
                               : field.name === 'processingFee'
-                                ? displayProcessingFee ||
-                                  formValues.processingFee ||
-                                  ''
+                                ? handleProcessingFeeFocus
                                 : undefined
                           }
                           {...register(
@@ -323,18 +328,10 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                               : field.name === 'amount'
                                 ? {
                                     onBlur: handleAmountBlur,
-                                    onChange: (e) => {
-                                      // Update display value as user types
-                                      setDisplayAmount(e.target.value);
-                                    },
                                   }
                                 : field.name === 'processingFee'
                                   ? {
                                       onBlur: handleProcessingFeeBlur,
-                                      onChange: (e) => {
-                                        // Update display value as user types
-                                        setDisplayProcessingFee(e.target.value);
-                                      },
                                     }
                                   : {}
                           )}
