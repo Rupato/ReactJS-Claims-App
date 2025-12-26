@@ -6,9 +6,8 @@ import React, {
   useCallback,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Claim, FormattedClaim } from '../../../entities/claim/types';
-import { API_CONFIG } from '../../../shared/constants';
+
+import { FormattedClaim } from '../../../entities/claim/types';
 import {
   formatCurrency,
   formatIncidentDate,
@@ -30,10 +29,10 @@ import {
 import { SearchInput } from '../../../shared/ui/SearchInput';
 import Dropdown from '../../../shared/ui/Dropdown';
 import { SORT_OPTIONS } from '../../../shared/ui/utils';
-import { LoadingSkeleton } from '../../../shared/ui/LoadingSkeleton';
 import { ErrorFallback } from '../../../shared/ui/ErrorFallback';
 import { ClaimDetailsModal } from './ClaimDetailsModal';
 import { ClaimCard } from '../../../entities/claim/ui/ClaimCard';
+import { useClaimsWorker } from '../hooks/useClaimsWorker';
 
 const ClaimsDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -55,38 +54,134 @@ const ClaimsDashboard: React.FC = () => {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [selectedCardIndex, setSelectedCardIndex] = useState<number>(-1);
 
+  // Advanced table features
+  const [columnVisibility, setColumnVisibility] = useState<
+    Record<string, boolean>
+  >({
+    number: true,
+    status: true,
+    holder: true,
+    policyNumber: true,
+    amount: true,
+    processingFee: true,
+    totalAmount: true,
+    incidentDate: true,
+    createdAt: true,
+  });
+
+  const [tableSort, setTableSort] = useState<{
+    column: string;
+    direction: 'asc' | 'desc' | null;
+  }>({
+    column: '',
+    direction: null,
+  });
+
+  // Load preferences from localStorage
+  const loadPreferences = () => {
+    try {
+      const savedVisibility = localStorage.getItem(
+        'claims-table-column-visibility'
+      );
+      const savedSort = localStorage.getItem('claims-table-sort');
+
+      if (savedVisibility) {
+        setColumnVisibility(JSON.parse(savedVisibility));
+      }
+      if (savedSort) {
+        setTableSort(JSON.parse(savedSort));
+      }
+    } catch (error) {
+      console.warn('Failed to load table preferences:', error);
+    }
+  };
+
+  // Save preferences to localStorage
+  const savePreferences = useCallback(() => {
+    try {
+      localStorage.setItem(
+        'claims-table-column-visibility',
+        JSON.stringify(columnVisibility)
+      );
+      localStorage.setItem('claims-table-sort', JSON.stringify(tableSort));
+    } catch (error) {
+      console.warn('Failed to save table preferences:', error);
+    }
+  }, [columnVisibility, tableSort]);
+
+  // Load preferences on mount
+  useEffect(() => {
+    loadPreferences();
+  }, []);
+
+  // Save preferences when they change
+  useEffect(() => {
+    savePreferences();
+  }, [columnVisibility, tableSort, savePreferences]);
+
+  // Handle column sorting
+  const handleColumnSort = (column: string) => {
+    let direction: 'asc' | 'desc' | null = 'asc';
+
+    if (tableSort.column === column) {
+      if (tableSort.direction === 'asc') direction = 'desc';
+      else if (tableSort.direction === 'desc') direction = null;
+      else direction = 'asc';
+    }
+
+    setTableSort({ column: direction ? column : '', direction });
+  };
+
+  // Get sort indicator
+  const getSortIndicator = (column: string) => {
+    if (tableSort.column !== column) return null;
+
+    if (tableSort.direction === 'asc') return '↑';
+    if (tableSort.direction === 'desc') return '↓';
+    return null;
+  };
+
   // Refs for navigation
   const containerRef = useRef<HTMLDivElement>(null);
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
 
-  const fetchClaims = async (): Promise<Claim[]> => {
-    const response = await fetch(
-      `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}`
-    );
-    if (!response.ok) throw new Error('Failed to fetch claims');
-    return response.json();
-  };
-
+  // Use web worker for loading claims data (sliding window approach)
   const {
-    data: claimsData,
+    claims,
+    totalRecords,
     isLoading,
-    error: queryError,
-  } = useQuery({
-    queryKey: ['claims'],
-    queryFn: fetchClaims,
-  });
+    hasData,
+    error: workerError,
+    loadChunkForRange,
+    switchToLoadedChunk,
+    loadedChunks,
+  } = useClaimsWorker();
 
-  const claims = useMemo(() => claimsData || [], [claimsData]);
+  // Debug loadedChunks changes
+  useEffect(() => {
+    console.log(
+      '🔍 loadedChunks updated:',
+      loadedChunks.map((c) => ({
+        start: c.start,
+        end: c.end,
+        hasData: !!c.data,
+      }))
+    );
+  }, [loadedChunks]);
 
   const availableStatuses = useMemo(() => {
-    const statusSet = new Set(claims.map((claim) => claim.status));
-    return Array.from(statusSet).sort();
+    const statusSet = new Set(
+      claims.map((claim: FormattedClaim) => claim.status)
+    );
+    return Array.from(statusSet).sort() as string[];
   }, [claims]);
 
   const statusFilteredClaims = useMemo(() => {
     if (selectedStatuses.length === 0) return claims;
-    return claims.filter((claim) => selectedStatuses.includes(claim.status));
+    return claims.filter((claim: FormattedClaim) =>
+      selectedStatuses.includes(claim.status)
+    );
   }, [claims, selectedStatuses]);
 
   const sortedClaims = useMemo(() => {
@@ -122,10 +217,72 @@ const ClaimsDashboard: React.FC = () => {
   const { cardStartIndex, cardEndIndex, handleCardsScroll, cardsPerRow } =
     useCardsVirtualization(formattedClaims.length, viewMode);
 
-  const statusOptions = availableStatuses.map((status) => ({
-    value: status,
-    label: status,
-  }));
+  // Track scroll position for enabling/disabling navigation buttons
+  const [tableScrollPosition, setTableScrollPosition] = useState({
+    top: 0,
+    height: 0,
+    scrollHeight: 0,
+  });
+  const [cardsScrollPosition, setCardsScrollPosition] = useState({
+    top: 0,
+    height: 0,
+    scrollHeight: 0,
+  });
+
+  // Update table scroll position tracking
+  const updateTableScrollPosition = useCallback(() => {
+    if (containerRef.current) {
+      const { scrollTop, clientHeight, scrollHeight } = containerRef.current;
+      setTableScrollPosition({
+        top: scrollTop,
+        height: clientHeight,
+        scrollHeight,
+      });
+    }
+  }, []);
+
+  // Update cards scroll position tracking
+  const updateCardsScrollPosition = useCallback(() => {
+    if (cardsContainerRef.current) {
+      const { scrollTop, clientHeight, scrollHeight } =
+        cardsContainerRef.current;
+      setCardsScrollPosition({
+        top: scrollTop,
+        height: clientHeight,
+        scrollHeight,
+      });
+    }
+  }, []);
+
+  // Effect to track table scroll changes
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', updateTableScrollPosition);
+      updateTableScrollPosition(); // Initial call
+      return () =>
+        container.removeEventListener('scroll', updateTableScrollPosition);
+    }
+  }, [updateTableScrollPosition]);
+
+  // Effect to track cards scroll changes
+  useEffect(() => {
+    const container = cardsContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', updateCardsScrollPosition);
+      updateCardsScrollPosition(); // Initial call
+      return () =>
+        container.removeEventListener('scroll', updateCardsScrollPosition);
+    }
+  }, [updateCardsScrollPosition]);
+
+  // Removed automatic scroll-based loading - now only manual button loading
+
+  const statusOptions: { value: string; label: string }[] =
+    availableStatuses.map((status) => ({
+      value: status,
+      label: status,
+    }));
 
   // Mobile detection for responsive behavior
   React.useEffect(() => {
@@ -314,12 +471,10 @@ const ClaimsDashboard: React.FC = () => {
     ]
   );
 
-  if (isLoading) return <LoadingSkeleton viewMode={viewMode} />;
-
-  if (queryError) {
+  if (workerError) {
     return (
       <ErrorFallback
-        error={queryError}
+        error={workerError}
         onRetry={() => window.location.reload()}
       />
     );
@@ -347,21 +502,8 @@ const ClaimsDashboard: React.FC = () => {
                 />
                 <button
                   onClick={() => navigate('/create')}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="inline-flex items-center px-12 py-2 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  <svg
-                    className="mr-2 h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
                   Create Claim
                 </button>
                 <div className="flex bg-gray-100 rounded-lg p-1">
@@ -389,6 +531,117 @@ const ClaimsDashboard: React.FC = () => {
               </div>
             </div>
           </div>
+
+          {/* Advanced Table Features */}
+          {viewMode === 'table' && (
+            <div className="px-6 py-4 border-b">
+              <div className="flex justify-end">
+                <Dropdown
+                  options={[
+                    {
+                      value: 'column-visibility',
+                      label: 'Column Visibility',
+                      customRender: (
+                        <div className="p-4 min-w-[280px]">
+                          <h4 className="text-sm font-medium text-gray-900 mb-3">
+                            Show Columns
+                          </h4>
+                          <div className="space-y-2">
+                            {Object.entries(columnVisibility).map(
+                              ([column, visible]) => (
+                                <label
+                                  key={column}
+                                  className="flex items-center gap-3"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={visible}
+                                    onChange={(e) =>
+                                      setColumnVisibility((prev) => ({
+                                        ...prev,
+                                        [column]: e.target.checked,
+                                      }))
+                                    }
+                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-gray-700">
+                                    {column === 'number'
+                                      ? 'Claim ID'
+                                      : column === 'status'
+                                        ? 'Status'
+                                        : column === 'holder'
+                                          ? 'Holder'
+                                          : column === 'policyNumber'
+                                            ? 'Policy'
+                                            : column === 'amount'
+                                              ? 'Amount'
+                                              : column === 'processingFee'
+                                                ? 'Fee'
+                                                : column === 'totalAmount'
+                                                  ? 'Total'
+                                                  : column === 'incidentDate'
+                                                    ? 'Incident'
+                                                    : column === 'createdAt'
+                                                      ? 'Created'
+                                                      : column}
+                                  </span>
+                                </label>
+                              )
+                            )}
+                          </div>
+                          <div className="mt-4 pt-3 border-t border-gray-200">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() =>
+                                  setColumnVisibility({
+                                    number: true,
+                                    status: true,
+                                    holder: true,
+                                    policyNumber: true,
+                                    amount: true,
+                                    processingFee: true,
+                                    totalAmount: true,
+                                    incidentDate: true,
+                                    createdAt: true,
+                                  })
+                                }
+                                className="text-xs text-blue-600 hover:text-blue-800 underline"
+                              >
+                                Show All
+                              </button>
+                              <span className="text-xs text-gray-400">|</span>
+                              <button
+                                onClick={() =>
+                                  setColumnVisibility({
+                                    number: true,
+                                    status: true,
+                                    holder: false,
+                                    policyNumber: false,
+                                    amount: true,
+                                    processingFee: false,
+                                    totalAmount: true,
+                                    incidentDate: false,
+                                    createdAt: true,
+                                  })
+                                }
+                                className="text-xs text-blue-600 hover:text-blue-800 underline"
+                              >
+                                Essentials Only
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ),
+                    },
+                  ]}
+                  value=""
+                  onChange={() => {}}
+                  placeholder="Table Options"
+                  className="table-options-dropdown"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Filters */}
           <div className="px-6 py-4 border-b">
@@ -463,11 +716,74 @@ const ClaimsDashboard: React.FC = () => {
           {/* Conditional View Rendering */}
           {viewMode === 'table' ? (
             <>
+              {/* Navigation Controls - Above Table */}
+              {hasData && (
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                  <div className="flex justify-center items-center gap-6">
+                    <div className="flex flex-col gap-2 items-center">
+                      <button
+                        onClick={() => {
+                          const currentChunkStart = loadedChunks[0]?.start || 0;
+                          const prevChunkStart = Math.max(
+                            0,
+                            currentChunkStart - 1000
+                          );
+
+                          // Check if previous chunk data is stored
+                          const storedChunk = loadedChunks.find(
+                            (chunk) => chunk.start === prevChunkStart
+                          );
+
+                          if (storedChunk) {
+                            console.log(
+                              `✅ Previous chunk ${prevChunkStart}-${prevChunkStart + 999} data found in memory, switching instantly`
+                            );
+                            // Use stored data - switch without API call
+                            switchToLoadedChunk(prevChunkStart);
+                            // Scroll to top to show the previous chunk
+                            setTimeout(() => {
+                              if (containerRef.current) {
+                                containerRef.current.scrollTop = 300;
+                              }
+                            }, 100);
+                          } else {
+                            console.log(
+                              `🔄 Loading previous chunk: ${prevChunkStart}-${prevChunkStart + 999}`
+                            );
+                            loadChunkForRange(prevChunkStart, 1000);
+                            // Scroll to top to show new data
+                            setTimeout(() => {
+                              if (containerRef.current) {
+                                containerRef.current.scrollTop = 300;
+                              }
+                            }, 100);
+                          }
+                        }}
+                        disabled={
+                          (loadedChunks[0]?.start || 0) === 0 ||
+                          tableScrollPosition.top > 10
+                        }
+                        className={`inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                          (loadedChunks[0]?.start || 0) === 0 ||
+                          tableScrollPosition.top > 10
+                            ? 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
+                            : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 cursor-pointer'
+                        }`}
+                      >
+                        Load Older
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Virtualized Table */}
               <div
                 ref={containerRef}
                 className="overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
-                style={{ height: CONTAINER_HEIGHT }}
+                style={{
+                  height: hasData ? CONTAINER_HEIGHT : CONTAINER_HEIGHT - 80,
+                }} // Adjust height when controls are above
                 onScroll={handleScroll}
                 onKeyDown={handleKeyDown}
                 tabIndex={viewMode === 'table' ? 0 : -1}
@@ -482,33 +798,141 @@ const ClaimsDashboard: React.FC = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0 z-10">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Claim ID
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Holder
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Policy
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Amount
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Fee
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Total
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Incident
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Created
-                      </th>
+                      {columnVisibility.number && (
+                        <th
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleColumnSort('number')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Claim ID
+                            {getSortIndicator('number') && (
+                              <span className="text-blue-600">
+                                {getSortIndicator('number')}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                      )}
+                      {columnVisibility.status && (
+                        <th
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleColumnSort('status')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Status
+                            {getSortIndicator('status') && (
+                              <span className="text-blue-600">
+                                {getSortIndicator('status')}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                      )}
+                      {columnVisibility.holder && (
+                        <th
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleColumnSort('holder')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Holder
+                            {getSortIndicator('holder') && (
+                              <span className="text-blue-600">
+                                {getSortIndicator('holder')}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                      )}
+                      {columnVisibility.policyNumber && (
+                        <th
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleColumnSort('policyNumber')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Policy
+                            {getSortIndicator('policyNumber') && (
+                              <span className="text-blue-600">
+                                {getSortIndicator('policyNumber')}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                      )}
+                      {columnVisibility.amount && (
+                        <th
+                          className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleColumnSort('amount')}
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            Amount
+                            {getSortIndicator('amount') && (
+                              <span className="text-blue-600">
+                                {getSortIndicator('amount')}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                      )}
+                      {columnVisibility.processingFee && (
+                        <th
+                          className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleColumnSort('processingFee')}
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            Fee
+                            {getSortIndicator('processingFee') && (
+                              <span className="text-blue-600">
+                                {getSortIndicator('processingFee')}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                      )}
+                      {columnVisibility.totalAmount && (
+                        <th
+                          className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleColumnSort('totalAmount')}
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            Total
+                            {getSortIndicator('totalAmount') && (
+                              <span className="text-blue-600">
+                                {getSortIndicator('totalAmount')}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                      )}
+                      {columnVisibility.incidentDate && (
+                        <th
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleColumnSort('incidentDate')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Incident
+                            {getSortIndicator('incidentDate') && (
+                              <span className="text-blue-600">
+                                {getSortIndicator('incidentDate')}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                      )}
+                      {columnVisibility.createdAt && (
+                        <th
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                          onClick={() => handleColumnSort('createdAt')}
+                        >
+                          <div className="flex items-center gap-1">
+                            Created
+                            {getSortIndicator('createdAt') && (
+                              <span className="text-blue-600">
+                                {getSortIndicator('createdAt')}
+                              </span>
+                            )}
+                          </div>
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -520,7 +944,7 @@ const ClaimsDashboard: React.FC = () => {
                       .slice(startIndex, endIndex)
                       .map((claim, index) => (
                         <tr
-                          key={claim.id}
+                          key={`table-${claim.id}-${startIndex + index}`}
                           ref={(el) => {
                             rowRefs.current[index] = el;
                           }}
@@ -532,40 +956,73 @@ const ClaimsDashboard: React.FC = () => {
                           onClick={() => handleRowSelect(claim)}
                           tabIndex={-1}
                         >
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {claim.number}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClasses(claim.status)}`}
-                            >
-                              {claim.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {claim.holder}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {claim.policyNumber}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                            {claim.formattedClaimAmount}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
-                            {claim.formattedProcessingFee}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
-                            {claim.formattedTotalAmount}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {claim.formattedIncidentDate}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {claim.formattedCreatedDate}
-                          </td>
+                          {columnVisibility.number && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {claim.number}
+                            </td>
+                          )}
+                          {columnVisibility.status && (
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClasses(claim.status)}`}
+                              >
+                                {claim.status}
+                              </span>
+                            </td>
+                          )}
+                          {columnVisibility.holder && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {claim.holder}
+                            </td>
+                          )}
+                          {columnVisibility.policyNumber && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {claim.policyNumber}
+                            </td>
+                          )}
+                          {columnVisibility.amount && (
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                              {claim.formattedClaimAmount}
+                            </td>
+                          )}
+                          {columnVisibility.processingFee && (
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                              {claim.formattedProcessingFee}
+                            </td>
+                          )}
+                          {columnVisibility.totalAmount && (
+                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-gray-900">
+                              {claim.formattedTotalAmount}
+                            </td>
+                          )}
+                          {columnVisibility.incidentDate && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {claim.formattedIncidentDate}
+                            </td>
+                          )}
+                          {columnVisibility.createdAt && (
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {claim.formattedCreatedDate}
+                            </td>
+                          )}
                         </tr>
                       ))}
 
+                    {/* Loading indicator when loading more data or initial data */}
+                    {isLoading && (
+                      <tr>
+                        <td colSpan={9} className="px-6 py-4 text-center">
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                            <span className="ml-2 text-sm text-gray-600">
+                              {hasData
+                                ? 'Loading more claims...'
+                                : 'Loading claims from server...'}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                     {/* Bottom spacer for virtualization */}
                     <tr
                       style={{
@@ -576,18 +1033,84 @@ const ClaimsDashboard: React.FC = () => {
                 </table>
               </div>
 
+              {hasData && (
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                  <div className="flex justify-center items-center gap-6">
+                    <div className="flex flex-col gap-2 items-center">
+                      <button
+                        onClick={() => {
+                          const currentChunkStart = loadedChunks[0]?.start || 0;
+                          const nextChunkStart = currentChunkStart + 1000;
+
+                          // Check if next chunk is already loaded
+                          const nextChunkLoaded = loadedChunks.some(
+                            (chunk) => chunk.start === nextChunkStart
+                          );
+
+                          if (nextChunkLoaded) {
+                            console.log(
+                              `✅ Next chunk ${nextChunkStart}-${nextChunkStart + 999} already loaded, scrolling to show it`
+                            );
+                            // Scroll to top to show the next chunk
+                            setTimeout(() => {
+                              if (containerRef.current) {
+                                containerRef.current.scrollTop = 300;
+                              }
+                            }, 100);
+                          } else {
+                            console.log(
+                              `🔄 Loading next chunk: ${nextChunkStart}-${nextChunkStart + 999}`
+                            );
+                            loadChunkForRange(nextChunkStart, 1000);
+                            // Scroll to top to show new data
+                            setTimeout(() => {
+                              if (containerRef.current) {
+                                containerRef.current.scrollTop = 300;
+                              }
+                            }, 100);
+                          }
+                        }}
+                        disabled={
+                          tableScrollPosition.top + tableScrollPosition.height <
+                          tableScrollPosition.scrollHeight - 10
+                        }
+                        className={`inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                          tableScrollPosition.top + tableScrollPosition.height <
+                          tableScrollPosition.scrollHeight - 10
+                            ? 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
+                            : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 cursor-pointer'
+                        }`}
+                      >
+                        Load More
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* Performance info for table */}
               <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
                 <div>
                   <p className="text-sm text-gray-500">
                     Virtualized table: Showing {endIndex - startIndex} rendered
-                    rows of {formattedClaims.length} total claims. Scroll to
-                    dynamically load/unload data for optimal performance.
+                    rows of {totalRecords.toLocaleString()} total claims. Scroll
+                    to dynamically load/unload data for optimal performance.
                   </p>
                   {!isMobile && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Rendered range: {startIndex + 1}-
-                      {Math.min(endIndex, formattedClaims.length)}
+                      Rendered range:{' '}
+                      {(() => {
+                        const chunkStart =
+                          loadedChunks.length > 0 ? loadedChunks[0].start : 0;
+                        const rangeStart = chunkStart + startIndex + 1;
+                        const rangeEnd =
+                          chunkStart +
+                          Math.min(endIndex, formattedClaims.length);
+                        console.log(
+                          `📊 Display calc: chunkStart=${chunkStart}, startIndex=${startIndex}, endIndex=${endIndex}, range=${rangeStart}-${rangeEnd}`
+                        );
+                        return `${rangeStart}-${rangeEnd}`;
+                      })()}{' '}
+                      (of {totalRecords.toLocaleString()} total)
                     </p>
                   )}
                   {isMobile && (
@@ -600,10 +1123,71 @@ const ClaimsDashboard: React.FC = () => {
             </>
           ) : (
             <>
+              {/* Navigation Controls - Above Cards */}
+              {hasData && (
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                  <div className="flex justify-center items-center gap-6">
+                    <div className="flex flex-col gap-2 items-center">
+                      <button
+                        onClick={() => {
+                          const currentChunkStart = loadedChunks[0]?.start || 0;
+                          const prevChunkStart = Math.max(
+                            0,
+                            currentChunkStart - 1000
+                          );
+
+                          // Check if previous chunk is already loaded
+                          const prevChunkLoaded = loadedChunks.some(
+                            (chunk) => chunk.start === prevChunkStart
+                          );
+
+                          if (prevChunkLoaded) {
+                            console.log(
+                              `✅ Previous chunk ${prevChunkStart}-${prevChunkStart + 999} already loaded, scrolling to show it`
+                            );
+                            // Scroll to top to show the previous chunk
+                            setTimeout(() => {
+                              if (cardsContainerRef.current) {
+                                cardsContainerRef.current.scrollTop = 300;
+                              }
+                            }, 100);
+                          } else {
+                            console.log(
+                              `🔄 Loading previous chunk: ${prevChunkStart}-${prevChunkStart + 999}`
+                            );
+                            loadChunkForRange(prevChunkStart, 1000);
+                            // Scroll to top to show new data
+                            setTimeout(() => {
+                              if (cardsContainerRef.current) {
+                                cardsContainerRef.current.scrollTop = 300;
+                              }
+                            }, 100);
+                          }
+                        }}
+                        disabled={
+                          (loadedChunks[0]?.start || 0) === 0 ||
+                          cardsScrollPosition.top > 10
+                        }
+                        className={`inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                          (loadedChunks[0]?.start || 0) === 0 ||
+                          cardsScrollPosition.top > 10
+                            ? 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
+                            : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 cursor-pointer'
+                        }`}
+                      >
+                        Load Older
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div
                 ref={cardsContainerRef}
                 className="overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
-                style={{ height: CONTAINER_HEIGHT }}
+                style={{
+                  height: hasData ? CONTAINER_HEIGHT : CONTAINER_HEIGHT - 80,
+                }} // Adjust height when controls are above
                 onScroll={handleCardsScroll}
                 onKeyDown={handleCardKeyDown}
                 tabIndex={viewMode === 'cards' ? 0 : -1}
@@ -653,6 +1237,18 @@ const ClaimsDashboard: React.FC = () => {
                         </div>
                       ))}
                   </div>
+                  {/* Loading indicator when loading more data or initial data */}
+                  {isLoading && (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <span className="ml-3 text-sm text-gray-600">
+                        {hasData
+                          ? 'Loading more claims...'
+                          : 'Loading claims...'}
+                      </span>
+                    </div>
+                  )}
+
                   {/* Bottom spacer for cards virtualization */}
                   <div
                     style={{
@@ -665,19 +1261,63 @@ const ClaimsDashboard: React.FC = () => {
                 </div>
               </div>
 
+              {hasData && (
+                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                  <div className="flex justify-center items-center gap-6">
+                    <div className="flex flex-col gap-2 items-center">
+                      <button
+                        onClick={() => {
+                          const currentChunkStart = loadedChunks[0]?.start || 0;
+                          const nextChunkStart = currentChunkStart + 1000;
+                          console.log(
+                            `🔄 Load next: nextChunkStart=${nextChunkStart}`
+                          );
+                          loadChunkForRange(nextChunkStart, 1000);
+                          // Scroll to top to show new data
+                          setTimeout(() => {
+                            if (cardsContainerRef.current) {
+                              cardsContainerRef.current.scrollTop = 300;
+                            }
+                          }, 100);
+                        }}
+                        disabled={
+                          cardsScrollPosition.top + cardsScrollPosition.height <
+                          cardsScrollPosition.scrollHeight - 10
+                        }
+                        className={`inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                          cardsScrollPosition.top + cardsScrollPosition.height <
+                          cardsScrollPosition.scrollHeight - 10
+                            ? 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
+                            : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 cursor-pointer'
+                        }`}
+                      >
+                        Load More
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* Performance info for cards */}
               <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
                 <div>
                   <p className="text-sm text-gray-500">
                     Virtualized cards: Showing {cardEndIndex - cardStartIndex}{' '}
-                    rendered cards of {formattedClaims.length} total claims.
-                    Scroll to dynamically load/unload data for optimal
+                    rendered cards of {totalRecords.toLocaleString()} total
+                    claims. Scroll to dynamically load/unload data for optimal
                     performance.
                   </p>
                   {!isMobile && (
                     <p className="text-xs text-gray-400 mt-1">
-                      Rendered range: {cardStartIndex + 1}-
-                      {Math.min(cardEndIndex, formattedClaims.length)}
+                      Rendered range:{' '}
+                      {loadedChunks.length > 0
+                        ? loadedChunks[0].start + cardStartIndex + 1
+                        : cardStartIndex + 1}
+                      -
+                      {loadedChunks.length > 0
+                        ? loadedChunks[0].start +
+                          Math.min(cardEndIndex, formattedClaims.length)
+                        : Math.min(cardEndIndex, formattedClaims.length)}{' '}
+                      (of {totalRecords.toLocaleString()} total)
                     </p>
                   )}
                   {isMobile && (
@@ -688,12 +1328,6 @@ const ClaimsDashboard: React.FC = () => {
                 </div>
               </div>
             </>
-          )}
-
-          {formattedClaims.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              No claims found matching your criteria.
-            </div>
           )}
         </div>
       </div>

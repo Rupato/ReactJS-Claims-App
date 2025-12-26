@@ -3,11 +3,9 @@ import { useForm, useWatch } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import {
-  useCreateClaimMutation,
-  usePolicyQuery,
-} from '../hooks/useClaimsQuery';
+import { API_CONFIG } from '../../../shared/constants';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../../../shared/ui/ToastContext';
 import { formFieldConfigs } from './form-config';
 import { createClaimValidationSchema, CreateClaimFormData } from './validation';
 import { VALIDATION_CONSTANTS } from '../../../shared/constants';
@@ -18,10 +16,14 @@ interface CreateClaimFormProps {
 
 const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
   const navigate = useNavigate();
+  const { success } = useToast();
 
   // Component state
   const [isHolderAutoFilled, setIsHolderAutoFilled] = useState(false);
   const [shouldLookupPolicy, setShouldLookupPolicy] = useState(false);
+  const [isPending, setIsPending] = useState(false);
+  const [mutationError, setMutationError] = useState<string | null>(null);
+  const [isPolicyLoading, setIsPolicyLoading] = useState(false);
 
   // Form management with validation
   const {
@@ -41,20 +43,89 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     control,
   });
 
-  // API hooks for data operations
-  const createClaimMutation = useCreateClaimMutation();
-  const isPending = createClaimMutation.isPending;
-  const mutationError = createClaimMutation.error;
+  // Simple policy lookup function
+  const lookupPolicy = React.useCallback(async (policyNumber: string) => {
+    try {
+      setIsPolicyLoading(true);
+      setMutationError(null);
 
-  // Policy lookup query - only enabled when we have a valid policy number and should lookup
-  const {
-    data: policyData,
-    isLoading: isPolicyLoading,
-    error: policyError,
-  } = usePolicyQuery(
-    formValues.policyNumber || '',
-    shouldLookupPolicy && !!formValues.policyNumber
-  );
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.POLICIES}?number=${encodeURIComponent(policyNumber)}`
+      );
+
+      if (!response.ok) throw new Error('Policy lookup failed');
+
+      const policies = await response.json();
+      const policy = Array.isArray(policies)
+        ? policies.find((p: { number: string }) => p.number === policyNumber)
+        : null;
+
+      return policy;
+    } catch (error) {
+      setMutationError(
+        error instanceof Error ? error.message : 'Policy lookup failed'
+      );
+      return null;
+    } finally {
+      setIsPolicyLoading(false);
+    }
+  }, []);
+
+  // Simple claim creation function
+  const createClaim = async (claimData: Record<string, unknown>) => {
+    try {
+      setIsPending(true);
+      setMutationError(null);
+
+      const requestBody = {
+        amount: parseFloat(claimData.amount as string),
+        holder: claimData.holder as string,
+        policyNumber: claimData.policyNumber as string,
+        insuredName: claimData.insuredName as string,
+        description: claimData.description as string,
+        processingFee: parseFloat(claimData.processingFee as string),
+        incidentDate: claimData.incidentDate as string,
+      };
+
+      const response = await fetch(
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLAIMS}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to create claim: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const responseText = await response.text();
+      if (!responseText.trim()) {
+        // Create a claim object since the API didn't return one
+        return {
+          id: Date.now(),
+          number: `CL-${Date.now()}`,
+          ...requestBody,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+        };
+      }
+
+      return JSON.parse(responseText);
+    } catch (error) {
+      setMutationError(
+        error instanceof Error ? error.message : 'Failed to create claim'
+      );
+      throw error;
+    } finally {
+      setIsPending(false);
+    }
+  };
 
   // Calculate date constraints
   const sixMonthsAgo = React.useMemo(() => {
@@ -79,29 +150,32 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     }
   }, [formValues.amount, formValues.processingFee, setValue]);
 
-  // Handle policy lookup response
+  // Handle policy lookup
   React.useEffect(() => {
-    if (policyData && shouldLookupPolicy) {
-      // Auto-fill holder name and clear any validation errors
-      setValue('holder', policyData.holder, { shouldValidate: false });
-      clearErrors('holder'); // Clear validation errors for holder field
-      setIsHolderAutoFilled(true);
-      setShouldLookupPolicy(false); // Reset the trigger
-    } else if (policyData === null && shouldLookupPolicy) {
-      // Policy not found - allow manual entry
-      setIsHolderAutoFilled(false);
-      setShouldLookupPolicy(false); // Reset the trigger
-    }
-  }, [policyData, shouldLookupPolicy, setValue, clearErrors]);
+    const performPolicyLookup = async () => {
+      if (shouldLookupPolicy && formValues.policyNumber) {
+        const policy = await lookupPolicy(formValues.policyNumber);
+        if (policy) {
+          // Auto-fill holder name and clear any validation errors
+          setValue('holder', policy.holder, { shouldValidate: false });
+          clearErrors('holder'); // Clear validation errors for holder field
+          setIsHolderAutoFilled(true);
+        } else {
+          // Policy not found - allow manual entry
+          setIsHolderAutoFilled(false);
+        }
+        setShouldLookupPolicy(false); // Reset the trigger
+      }
+    };
 
-  // Handle policy lookup errors
-  React.useEffect(() => {
-    if (policyError && shouldLookupPolicy) {
-      // API failed - allow manual entry
-      setIsHolderAutoFilled(false);
-      setShouldLookupPolicy(false);
-    }
-  }, [policyError, shouldLookupPolicy]);
+    performPolicyLookup();
+  }, [
+    shouldLookupPolicy,
+    formValues.policyNumber,
+    lookupPolicy,
+    setValue,
+    clearErrors,
+  ]);
 
   // Track form changes for unsaved changes warning
   React.useEffect(() => {
@@ -166,7 +240,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
   };
 
   // Handle form submission with React Hook Form
-  const onSubmit = (data: CreateClaimFormData) => {
+  const onSubmit = async (data: CreateClaimFormData) => {
     console.log('Original form data:', data);
     // Clean currency values by removing commas before submission
     const cleanData = {
@@ -176,16 +250,14 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     };
     console.log('Cleaned form data:', cleanData);
 
-    createClaimMutation.mutate({
-      holder: cleanData.holder,
-      policyNumber: cleanData.policyNumber,
-      incidentDate: cleanData.incidentDate,
-      amount: cleanData.amount,
-      processingFee: cleanData.processingFee,
-      description: cleanData.description,
-      insuredName: cleanData.insuredName,
-    });
-    navigate('/');
+    try {
+      const createdClaim = await createClaim(cleanData);
+      success(`Claim ${createdClaim.number || 'created'} successfully!`);
+      navigate('/');
+    } catch (error) {
+      // Error is already handled in the createClaim function
+      console.error('Form submission error:', error);
+    }
   };
 
   // Create dynamic form fields with current state
@@ -421,8 +493,8 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                     </h3>
                     <div className="mt-2 text-sm text-red-700">
                       <p>
-                        {mutationError instanceof Error
-                          ? mutationError.message
+                        {typeof mutationError === 'string'
+                          ? mutationError
                           : 'An unexpected error occurred. Please try again.'}
                       </p>
                     </div>
@@ -462,22 +534,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                     Creating Claim...
                   </>
                 ) : (
-                  <>
-                    <svg
-                      className="mr-2 h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    Create Claim
-                  </>
+                  <>Create Claim</>
                 )}
               </button>
             </div>
