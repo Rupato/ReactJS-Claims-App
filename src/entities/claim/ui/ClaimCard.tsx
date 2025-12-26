@@ -5,9 +5,10 @@ import { FormattedClaim } from '../types';
 interface ClaimCardProps {
   claim: FormattedClaim;
   onCardClick?: (claim: FormattedClaim) => void;
+  isSelected?: boolean;
 }
 
-const ClaimCard = React.memo(({ claim, onCardClick }: ClaimCardProps) => {
+const ClaimCard = React.memo(({ claim, onCardClick, isSelected = false }: ClaimCardProps) => {
   const handleClick = () => {
     onCardClick?.(claim);
   };
@@ -21,7 +22,11 @@ const ClaimCard = React.memo(({ claim, onCardClick }: ClaimCardProps) => {
 
   return (
     <article
-      className={`bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow ${
+      className={`bg-white border rounded-lg p-6 hover:shadow-md transition-shadow ${
+        isSelected
+          ? 'border-blue-500 ring-2 ring-blue-500 ring-offset-2 bg-blue-50'
+          : 'border-gray-200'
+      } ${
         onCardClick
           ? 'cursor-pointer focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2'
           : ''
