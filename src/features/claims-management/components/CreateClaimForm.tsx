@@ -123,25 +123,33 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
   // Currency formatting on blur
   const handleAmountBlur = () => {
     const value = formValues.amount;
-    if (value && !isNaN(parseFloat(value))) {
-      const num = parseFloat(value);
+    if (
+      value &&
+      value.trim() !== '' &&
+      !isNaN(parseFloat(value.replace(/,/g, '')))
+    ) {
+      const num = parseFloat(value.replace(/,/g, '')); // Remove existing commas
       const formatted = num.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
-      setValue('amount', formatted);
+      setValue('amount', formatted, { shouldValidate: false });
     }
   };
 
   const handleProcessingFeeBlur = () => {
     const value = formValues.processingFee;
-    if (value && !isNaN(parseFloat(value))) {
-      const num = parseFloat(value);
+    if (
+      value &&
+      value.trim() !== '' &&
+      !isNaN(parseFloat(value.replace(/,/g, '')))
+    ) {
+      const num = parseFloat(value.replace(/,/g, '')); // Remove existing commas
       const formatted = num.toLocaleString('en-US', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
-      setValue('processingFee', formatted);
+      setValue('processingFee', formatted, { shouldValidate: false });
     }
   };
 
