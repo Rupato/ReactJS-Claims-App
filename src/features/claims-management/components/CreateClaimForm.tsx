@@ -126,7 +126,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
   const handleAmountFocus = () => {
     // On focus, ensure we show the raw numeric value for editing
     const currentValue = formValues.amount;
-    console.log(currentValue);
+    console.log(currentValue, formValues);
     if (currentValue && currentValue.includes(',')) {
       // Remove formatting for editing
       const rawValue = currentValue.replace(/,/g, '');
@@ -182,14 +182,21 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
 
   // Handle form submission with React Hook Form
   const onSubmit = (data: CreateClaimFormData) => {
+    // Clean currency values by removing commas before submission
+    const cleanData = {
+      ...data,
+      amount: data.amount.replace(/,/g, ''),
+      processingFee: data.processingFee.replace(/,/g, ''),
+    };
+
     createClaimMutation.mutate({
-      holder: data.holder,
-      policyNumber: data.policyNumber,
-      incidentDate: data.incidentDate,
-      amount: data.amount,
-      processingFee: data.processingFee,
-      description: data.description,
-      insuredName: data.insuredName,
+      holder: cleanData.holder,
+      policyNumber: cleanData.policyNumber,
+      incidentDate: cleanData.incidentDate,
+      amount: cleanData.amount,
+      processingFee: cleanData.processingFee,
+      description: cleanData.description,
+      insuredName: cleanData.insuredName,
     });
     navigate('/');
   };
