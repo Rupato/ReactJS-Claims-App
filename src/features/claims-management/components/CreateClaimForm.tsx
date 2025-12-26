@@ -365,7 +365,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
                       )}
                     </div>
 
-                    {error && (
+                    {error && !isAutoFilled && (
                       <p className="mt-1 text-sm text-red-600">
                         {error.message}
                       </p>
