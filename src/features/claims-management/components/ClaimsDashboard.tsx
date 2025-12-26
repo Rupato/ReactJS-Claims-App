@@ -15,6 +15,8 @@ import { ROW_HEIGHT, CONTAINER_HEIGHT } from '../../../shared/virtualization';
 import { CardsView } from '../../../widgets/claims-table/CardsView';
 import { useSearch } from '../../../shared/hooks/useSearch';
 import { SearchInput } from '../../../shared/ui/SearchInput';
+import Dropdown from '../../../shared/ui/Dropdown';
+import { SORT_OPTIONS } from '../../../shared/ui/utils';
 
 const ClaimsDashboard: React.FC = () => {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
@@ -22,8 +24,6 @@ const ClaimsDashboard: React.FC = () => {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [claims, setClaims] = useState<Claim[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
-  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
   useEffect(() => {
     const fetchClaims = async () => {
@@ -44,27 +44,6 @@ const ClaimsDashboard: React.FC = () => {
 
     fetchClaims();
   }, []);
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        isSortDropdownOpen &&
-        !(event.target as Element).closest('.sort-dropdown')
-      ) {
-        setIsSortDropdownOpen(false);
-      }
-      if (
-        isStatusDropdownOpen &&
-        !(event.target as Element).closest('.status-dropdown')
-      ) {
-        setIsStatusDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isSortDropdownOpen, isStatusDropdownOpen]);
 
   const availableStatuses = useMemo(() => {
     const statusSet = new Set(claims.map((claim) => claim.status));
@@ -110,18 +89,10 @@ const ClaimsDashboard: React.FC = () => {
   const { cardStartIndex, cardEndIndex, handleCardsScroll, cardsPerRow } =
     useCardsVirtualization(formattedClaims.length, viewMode);
 
-  const sortOptions = [
-    { value: 'created-newest' as SortOption, label: 'Newest First' },
-    { value: 'created-oldest' as SortOption, label: 'Oldest First' },
-    { value: 'amount-highest' as SortOption, label: 'Highest Amount' },
-    { value: 'amount-lowest' as SortOption, label: 'Lowest Amount' },
-    { value: 'total-highest' as SortOption, label: 'Highest Total' },
-    { value: 'total-lowest' as SortOption, label: 'Lowest Total' },
-  ];
-
-  const currentSortLabel =
-    sortOptions.find((option) => option.value === sortOption)?.label ||
-    'Newest First';
+  const statusOptions = availableStatuses.map((status) => ({
+    value: status,
+    label: status,
+  }));
 
   //if (isLoading) return <div className="text-center py-8">Loading...</div>;
   if (error)
@@ -152,7 +123,7 @@ const ClaimsDashboard: React.FC = () => {
                 <div className="flex bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('table')}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-6 py-3 rounded-md text-sm font-medium transition-colors min-w-[150px] ${
                       viewMode === 'table'
                         ? 'bg-white text-gray-900 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
@@ -162,7 +133,7 @@ const ClaimsDashboard: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setViewMode('cards')}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`px-6 py-3 rounded-md text-sm font-medium transition-colors min-w-[150px] ${
                       viewMode === 'cards'
                         ? 'bg-white text-gray-900 shadow-sm'
                         : 'text-gray-600 hover:text-gray-900'
@@ -178,116 +149,32 @@ const ClaimsDashboard: React.FC = () => {
           {/* Filters */}
           <div className="px-6 py-4 border-b">
             <div className="flex flex-col sm:flex-row gap-4 justify-between">
-              {/* Sort Dropdown */}
-              <div className="relative sort-dropdown">
-                <button
-                  onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 flex items-center justify-between min-w-[180px]"
-                >
-                  <span className="text-sm">{currentSortLabel}</span>
-                  <svg
-                    className={`w-4 h-4 ml-2 transition-transform ${isSortDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
-
-                {isSortDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-50">
-                    {sortOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        onClick={() => {
-                          setSortOption(option.value);
-                          setIsSortDropdownOpen(false);
-                        }}
-                        className={`w-full text-left px-3 py-2 hover:bg-gray-50 focus:outline-none focus:bg-gray-50 ${
-                          sortOption === option.value
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-700'
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* Status Filters Dropdown */}
-              <div className="relative status-dropdown">
-                <button
-                  onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 flex items-center justify-between min-w-[200px]"
-                >
-                  <span className="text-sm">
-                    {selectedStatuses.length === 0
-                      ? 'Filter by Status'
-                      : `${selectedStatuses.length} status${selectedStatuses.length > 1 ? 'es' : ''} selected`}
-                  </span>
-                  <svg
-                    className={`w-4 h-4 ml-2 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
+              <Dropdown
+                options={statusOptions}
+                value={selectedStatuses}
+                onChange={(value) => setSelectedStatuses(value as string[])}
+                placeholder="Filter by Status"
+                multiSelect={true}
+                className="status-dropdown"
+              />
 
-                {isStatusDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
-                    {availableStatuses.map((status) => (
-                      <label
-                        key={status}
-                        className="flex items-center px-3 py-2 hover:bg-gray-50 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedStatuses.includes(status)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedStatuses([
-                                ...selectedStatuses,
-                                status,
-                              ]);
-                            } else {
-                              setSelectedStatuses(
-                                selectedStatuses.filter((s) => s !== status)
-                              );
-                            }
-                          }}
-                          className="mr-2"
-                        />
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColorClasses(status)}`}
-                        >
-                          {status}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {/* Sort Dropdown */}
+              <Dropdown
+                options={SORT_OPTIONS}
+                value={sortOption}
+                onChange={(value) => setSortOption(value as SortOption)}
+                placeholder="Sort by"
+                className="sort-dropdown"
+              />
             </div>
 
             {/* Active Filters Chips */}
             {selectedStatuses.length > 0 && (
               <div className="flex flex-wrap items-center gap-2 mt-4">
-                <span className="text-sm text-gray-600 mr-2">Active filters:</span>
+                <span className="text-sm text-gray-600 mr-2">
+                  Active filters:
+                </span>
                 {selectedStatuses.map((status) => (
                   <div
                     key={status}
@@ -303,8 +190,18 @@ const ClaimsDashboard: React.FC = () => {
                       className="ml-1 hover:bg-black hover:bg-opacity-10 rounded-full p-0.5"
                       aria-label={`Remove ${status} filter`}
                     >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-3 h-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </button>
                   </div>
