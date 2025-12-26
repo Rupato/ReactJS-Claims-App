@@ -30,6 +30,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     register,
     handleSubmit: rhfHandleSubmit,
     setValue,
+    clearErrors,
     control,
     formState: { errors, isValid },
   } = useForm<CreateClaimFormData>({
@@ -83,8 +84,9 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
   // Handle policy lookup response
   React.useEffect(() => {
     if (policyData && shouldLookupPolicy) {
-      // Auto-fill holder name
-      setValue('holder', policyData.holder);
+      // Auto-fill holder name and clear any validation errors
+      setValue('holder', policyData.holder, { shouldValidate: false });
+      clearErrors('holder'); // Clear validation errors for holder field
       setIsHolderAutoFilled(true);
       setShouldLookupPolicy(false); // Reset the trigger
     } else if (policyData === null && shouldLookupPolicy) {
@@ -92,7 +94,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
       setIsHolderAutoFilled(false);
       setShouldLookupPolicy(false); // Reset the trigger
     }
-  }, [policyData, shouldLookupPolicy, setValue]);
+  }, [policyData, shouldLookupPolicy, setValue, clearErrors]);
 
   // Handle policy lookup errors
   React.useEffect(() => {
