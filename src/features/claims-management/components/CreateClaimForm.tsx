@@ -33,7 +33,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     formState: { errors, isValid },
   } = useForm<CreateClaimFormData>({
     resolver: yupResolver(createClaimValidationSchema),
-    mode: 'onChange', // Validate on change for immediate feedback
+    mode: 'onBlur', // Validate on blur to prevent field clearing
   });
 
   // Watch form values for smart behaviors using useWatch
@@ -139,7 +139,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
       const num = parseFloat(value);
 
       // Only format if it's a valid number
-      if (!isNaN(num)) {
+      if (!isNaN(num) && num >= 0) {
         const formatted = num.toLocaleString('en-US', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
@@ -147,6 +147,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
         // Set the formatted value for display
         setValue('amount', formatted);
       }
+      // If invalid, keep the current value (don't clear it)
     }
   };
 
