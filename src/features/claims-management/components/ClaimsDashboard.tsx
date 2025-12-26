@@ -38,7 +38,10 @@ const ClaimsDashboard: React.FC = () => {
     'status',
     []
   );
-  const [sortOption, setSortOption] = useUrlTypedState<SortOption>('sort', 'created-newest');
+  const [sortOption, setSortOption] = useUrlTypedState<SortOption>(
+    'sort',
+    'created-newest'
+  );
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [selectedClaim, setSelectedClaim] = useState<FormattedClaim | null>(
     null
