@@ -99,17 +99,19 @@ const DefaultErrorFallback = ({
           contact support if the problem persists.
         </p>
 
-        {typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' && error && (
-          <details className="mb-4 text-left">
-            <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
-              Error Details (Development)
-            </summary>
-            <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32 text-black">
-              {error.message}
-              {error.stack && `\n\n${error.stack}`}
-            </pre>
-          </details>
-        )}
+        {typeof process !== 'undefined' &&
+          process.env?.NODE_ENV === 'development' &&
+          error && (
+            <details className="mb-4 text-left">
+              <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
+                Error Details (Development)
+              </summary>
+              <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32 text-black">
+                {error.message}
+                {error.stack && `\n\n${error.stack}`}
+              </pre>
+            </details>
+          )}
 
         <div className="flex gap-3 justify-center">
           <button

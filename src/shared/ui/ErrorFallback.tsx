@@ -17,7 +17,11 @@ const categorizeError = (error: unknown): ErrorCategory => {
     if (error.message.includes('401') || error.message.includes('403')) {
       return 'auth';
     }
-    if (error.message.includes('5') || error.message.includes('502') || error.message.includes('503')) {
+    if (
+      error.message.includes('5') ||
+      error.message.includes('502') ||
+      error.message.includes('503')
+    ) {
       return 'server';
     }
   }
@@ -31,25 +35,29 @@ const getErrorDisplay = (category: ErrorCategory) => {
       return {
         icon: '📡',
         title: 'Connection Problem',
-        message: 'Unable to connect to the server. Please check your internet connection and try again.',
+        message:
+          'Unable to connect to the server. Please check your internet connection and try again.',
       };
     case 'server':
       return {
         icon: '🔧',
         title: 'Server Error',
-        message: 'Our servers are experiencing issues. Please try again in a few minutes.',
+        message:
+          'Our servers are experiencing issues. Please try again in a few minutes.',
       };
     case 'auth':
       return {
         icon: '🔐',
         title: 'Access Denied',
-        message: 'You don\'t have permission to access this resource. Please contact support if this seems incorrect.',
+        message:
+          "You don't have permission to access this resource. Please contact support if this seems incorrect.",
       };
     default:
       return {
         icon: '⚠️',
         title: 'Something Went Wrong',
-        message: 'An unexpected error occurred. Please try again or contact support if the problem persists.',
+        message:
+          'An unexpected error occurred. Please try again or contact support if the problem persists.',
       };
   }
 };
@@ -71,21 +79,21 @@ export const ErrorFallback = ({ error, onRetry }: ErrorFallbackProps) => {
           {display.title}
         </h2>
 
-        <p className="text-gray-600 mb-6">
-          {display.message}
-        </p>
+        <p className="text-gray-600 mb-6">{display.message}</p>
 
-        {typeof process !== 'undefined' && process.env?.NODE_ENV === 'development' && error instanceof Error && (
-          <details className="mb-4 text-left">
-            <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
-              Error Details (Development)
-            </summary>
-            <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32 text-black">
-              {error.message}
-              {error.stack && `\n\n${error.stack}`}
-            </pre>
-          </details>
-        )}
+        {typeof process !== 'undefined' &&
+          process.env?.NODE_ENV === 'development' &&
+          error instanceof Error && (
+            <details className="mb-4 text-left">
+              <summary className="cursor-pointer text-sm font-medium text-gray-700 mb-2">
+                Error Details (Development)
+              </summary>
+              <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-32 text-black">
+                {error.message}
+                {error.stack && `\n\n${error.stack}`}
+              </pre>
+            </details>
+          )}
 
         <div className="flex gap-3 justify-center">
           {onRetry && (
