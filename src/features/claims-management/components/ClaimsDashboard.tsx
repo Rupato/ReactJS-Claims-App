@@ -17,6 +17,7 @@ import { useSearch } from '../../../shared/hooks/useSearch';
 import { SearchInput } from '../../../shared/ui/SearchInput';
 import Dropdown from '../../../shared/ui/Dropdown';
 import { SORT_OPTIONS } from '../../../shared/ui/utils';
+import { ClaimDetailsModal } from './ClaimDetailsModal';
 
 const ClaimsDashboard: React.FC = () => {
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
@@ -24,6 +25,9 @@ const ClaimsDashboard: React.FC = () => {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [claims, setClaims] = useState<Claim[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [selectedClaim, setSelectedClaim] = useState<FormattedClaim | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number>(-1);
 
   useEffect(() => {
     const fetchClaims = async () => {
@@ -93,6 +97,83 @@ const ClaimsDashboard: React.FC = () => {
     value: status,
     label: status,
   }));
+
+  const handleRowSelect = (claim: FormattedClaim) => {
+    setSelectedClaim(claim);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedClaim(null);
+  };
+
+  // Global keyboard listener to activate navigation
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Only activate if we're not already focused and an arrow key is pressed
+      if (
+        selectedIndex === -1 &&
+        (e.key === 'ArrowUp' ||
+          e.key === 'ArrowDown' ||
+          e.key === 'ArrowLeft' ||
+          e.key === 'ArrowRight')
+      ) {
+        e.preventDefault();
+        // Focus the table container and select first row
+        const tableContainer = document.querySelector('[data-table-container]');
+        if (tableContainer) {
+          (tableContainer as HTMLElement).focus();
+          setSelectedIndex(startIndex);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleGlobalKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [selectedIndex, startIndex]);
+
+  // Keyboard navigation handler
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const visibleClaims = formattedClaims.slice(startIndex, endIndex);
+    const currentVisibleIndex = selectedIndex - startIndex;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        if (selectedIndex === -1) {
+          // No row selected, select the first visible row
+          setSelectedIndex(startIndex);
+        } else if (currentVisibleIndex < visibleClaims.length - 1) {
+          setSelectedIndex((prev) => prev + 1);
+        } else if (endIndex < formattedClaims.length) {
+          // Scroll down to show more rows
+          // This would need scroll handling
+          setSelectedIndex(endIndex);
+        }
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        if (selectedIndex === -1) {
+          // No row selected, select the first visible row
+          setSelectedIndex(startIndex);
+        } else if (currentVisibleIndex > 0) {
+          setSelectedIndex((prev) => prev - 1);
+        } else if (startIndex > 0) {
+          // Scroll up to show more rows
+          setSelectedIndex(startIndex - 1);
+        }
+        break;
+      case 'Enter':
+        if (selectedIndex >= 0 && selectedIndex < formattedClaims.length) {
+          handleRowSelect(formattedClaims[selectedIndex]);
+        }
+        break;
+    }
+  };
 
   //if (isLoading) return <div className="text-center py-8">Loading...</div>;
   if (error)
@@ -221,10 +302,18 @@ const ClaimsDashboard: React.FC = () => {
             <>
               {/* Virtualized Table */}
               <div
-                className="overflow-auto"
+                className="overflow-auto focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset"
                 style={{ height: CONTAINER_HEIGHT }}
                 onScroll={handleScroll}
+                onKeyDown={handleKeyDown}
+                tabIndex={viewMode === 'table' ? 0 : -1}
+                data-table-container
+                role="region"
+                aria-labelledby="table-keyboard-instructions"
               >
+                <div id="table-keyboard-instructions" className="sr-only">
+                  Use ↑↓ arrow keys to navigate rows, Enter to open claim details
+                </div>
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0 z-10">
                     <tr>
@@ -265,7 +354,11 @@ const ClaimsDashboard: React.FC = () => {
                     {formattedClaims
                       .slice(startIndex, endIndex)
                       .map((claim) => (
-                        <tr key={claim.id} className="hover:bg-gray-50">
+                        <tr
+                          key={claim.id}
+                          className="hover:bg-gray-50 cursor-pointer"
+                          onClick={() => handleRowSelect(claim)}
+                        >
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {claim.number}
                           </td>
@@ -344,6 +437,13 @@ const ClaimsDashboard: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Claim Details Modal */}
+      <ClaimDetailsModal
+        claim={selectedClaim}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </div>
   );
 };
