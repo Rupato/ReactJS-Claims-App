@@ -426,7 +426,7 @@ const ClaimsDashboard: React.FC = () => {
               cardsPerRow={cardsPerRow}
               onScroll={handleCardsScroll}
               hasActiveFilters={hasActiveFilters}
-              onCardClick={(claim) => console.log('Card clicked:', claim)}
+              onCardClick={handleRowSelect}
             />
           )}
 
