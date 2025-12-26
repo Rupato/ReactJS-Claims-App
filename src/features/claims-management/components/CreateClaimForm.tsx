@@ -136,6 +136,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         });
+        console.log({ formatted, cleanValue, num });
         setDisplayAmount(formatted);
         // Keep the clean number in form state for validation
         setValue('amount', cleanValue, { shouldValidate: false });
