@@ -1,4 +1,10 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, {
+  useState,
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+} from 'react';
 import { Claim, FormattedClaim } from '../../../entities/claim/types';
 import { API_CONFIG } from '../../../shared/constants';
 import {
@@ -26,7 +32,9 @@ const ClaimsDashboard: React.FC = () => {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [claims, setClaims] = useState<Claim[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [selectedClaim, setSelectedClaim] = useState<FormattedClaim | null>(null);
+  const [selectedClaim, setSelectedClaim] = useState<FormattedClaim | null>(
+    null
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [selectedCardIndex, setSelectedCardIndex] = useState<number>(-1);
@@ -209,7 +217,10 @@ const ClaimsDashboard: React.FC = () => {
           }
           break;
         case 'Enter':
-          if (selectedCardIndex >= 0 && selectedCardIndex < formattedClaims.length) {
+          if (
+            selectedCardIndex >= 0 &&
+            selectedCardIndex < formattedClaims.length
+          ) {
             handleRowSelect(formattedClaims[selectedCardIndex]);
           }
           break;
@@ -415,7 +426,8 @@ const ClaimsDashboard: React.FC = () => {
                 aria-labelledby="table-keyboard-instructions"
               >
                 <div id="table-keyboard-instructions" className="sr-only">
-                  Use ↑↓ arrow keys to navigate rows, Enter to open claim details
+                  Use ↑↓ arrow keys to navigate rows, Enter to open claim
+                  details
                 </div>
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0 z-10">
@@ -543,7 +555,8 @@ const ClaimsDashboard: React.FC = () => {
                 aria-labelledby="cards-keyboard-instructions"
               >
                 <div id="cards-keyboard-instructions" className="sr-only">
-                  Use ↑↓←→ arrow keys to navigate cards, Enter to open claim details
+                  Use ↑↓←→ arrow keys to navigate cards, Enter to open claim
+                  details
                 </div>
                 <div className="p-6">
                   <h3 id="cards-keyboard-label" className="sr-only">
@@ -552,7 +565,9 @@ const ClaimsDashboard: React.FC = () => {
                   {/* Top spacer for cards virtualization */}
                   <div
                     style={{
-                      height: Math.floor(cardStartIndex / cardsPerRow) * (hasActiveFilters ? 200 : 240),
+                      height:
+                        Math.floor(cardStartIndex / cardsPerRow) *
+                        (hasActiveFilters ? 200 : 240),
                     }}
                   />
                   <div
@@ -574,7 +589,9 @@ const ClaimsDashboard: React.FC = () => {
                           <ClaimCard
                             claim={claim}
                             onCardClick={handleRowSelect}
-                            isSelected={selectedCardIndex === cardStartIndex + index}
+                            isSelected={
+                              selectedCardIndex === cardStartIndex + index
+                            }
                           />
                         </div>
                       ))}
@@ -595,9 +612,10 @@ const ClaimsDashboard: React.FC = () => {
               <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
                 <div>
                   <p className="text-sm text-gray-500">
-                    Virtualized cards: Showing {cardEndIndex - cardStartIndex} rendered
-                    cards of {formattedClaims.length} total claims. Scroll to
-                    dynamically load/unload data for optimal performance.
+                    Virtualized cards: Showing {cardEndIndex - cardStartIndex}{' '}
+                    rendered cards of {formattedClaims.length} total claims.
+                    Scroll to dynamically load/unload data for optimal
+                    performance.
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
                     Rendered range: {cardStartIndex + 1}-
