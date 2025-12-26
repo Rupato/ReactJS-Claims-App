@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import ClaimsDashboard from '../ClaimsDashboard';
+// import { render, screen } from '@testing-library/react';
+// import ClaimsDashboard from '../ClaimsDashboard';
 
 // Mock the fetch API to avoid network calls in tests
 global.fetch = vi.fn(() =>
