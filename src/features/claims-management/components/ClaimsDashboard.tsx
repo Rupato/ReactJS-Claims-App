@@ -5,6 +5,7 @@ import React, {
   useRef,
   useCallback,
 } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Claim, FormattedClaim } from '../../../entities/claim/types';
 import { API_CONFIG } from '../../../shared/constants';
@@ -35,6 +36,7 @@ import { ClaimDetailsModal } from './ClaimDetailsModal';
 import { ClaimCard } from '../../../entities/claim/ui/ClaimCard';
 
 const ClaimsDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useUrlStringState('search');
   const [selectedStatuses, setSelectedStatuses] = useUrlArrayState(
     'status',
@@ -330,6 +332,25 @@ const ClaimsDashboard: React.FC = () => {
                   onChange={setSearchTerm}
                   isSearching={isSearching}
                 />
+                <button
+                  onClick={() => navigate('/create')}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <svg
+                    className="mr-2 h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  Create Claim
+                </button>
                 <div className="flex bg-gray-100 rounded-lg p-1">
                   <button
                     onClick={() => setViewMode('table')}
