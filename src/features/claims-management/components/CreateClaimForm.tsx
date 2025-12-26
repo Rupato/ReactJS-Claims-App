@@ -129,7 +129,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     if (currentValue && currentValue.includes(',')) {
       // Remove formatting for editing
       const rawValue = currentValue.replace(/,/g, '');
-      setValue('amount', rawValue, { shouldValidate: false });
+      setValue('amount', rawValue);
     }
   };
 
@@ -145,7 +145,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
           maximumFractionDigits: 2,
         });
         // Set the formatted value for display
-        setValue('amount', formatted, { shouldValidate: false });
+        setValue('amount', formatted);
       }
     }
   };
@@ -156,7 +156,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
     if (currentValue && currentValue.includes(',')) {
       // Remove formatting for editing
       const rawValue = currentValue.replace(/,/g, '');
-      setValue('processingFee', rawValue, { shouldValidate: false });
+      setValue('processingFee', rawValue);
     }
   };
 
@@ -172,7 +172,7 @@ const CreateClaimForm = ({ onFormChange }: CreateClaimFormProps) => {
           maximumFractionDigits: 2,
         });
         // Set the formatted value for display
-        setValue('processingFee', formatted, { shouldValidate: false });
+        setValue('processingFee', formatted);
       }
     }
   };

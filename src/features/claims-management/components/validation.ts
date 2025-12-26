@@ -7,7 +7,9 @@ export const createClaimValidationSchema = yup.object({
     .required('Claim amount is required')
     .test('is-valid-number', 'Please enter a valid amount', (value) => {
       if (!value) return false;
-      const num = parseFloat(value);
+      // Remove commas before parsing to handle formatted currency
+      const cleanValue = value.replace(/,/g, '');
+      const num = parseFloat(cleanValue);
       return !isNaN(num) && num > 0;
     })
     .test(
@@ -15,7 +17,9 @@ export const createClaimValidationSchema = yup.object({
       `Claim amount cannot exceed $${VALIDATION_CONSTANTS.MAX_CLAIM_AMOUNT}`,
       (value) => {
         if (!value) return true;
-        const num = parseFloat(value);
+        // Remove commas before parsing to handle formatted currency
+        const cleanValue = value.replace(/,/g, '');
+        const num = parseFloat(cleanValue);
         return num <= VALIDATION_CONSTANTS.MAX_CLAIM_AMOUNT;
       }
     ),
@@ -46,7 +50,9 @@ export const createClaimValidationSchema = yup.object({
     .required('Processing fee is required')
     .test('is-valid-fee', 'Please enter a valid processing fee', (value) => {
       if (!value) return false;
-      const num = parseFloat(value);
+      // Remove commas before parsing to handle formatted currency
+      const cleanValue = value.replace(/,/g, '');
+      const num = parseFloat(cleanValue);
       return !isNaN(num) && num >= 0;
     }),
   incidentDate: yup
