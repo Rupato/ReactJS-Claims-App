@@ -8,6 +8,7 @@ A modern React application for managing insurance claims, built with performance
 
 - Node.js 18+
 - pnpm
+- npm
 
 ### Installation
 
