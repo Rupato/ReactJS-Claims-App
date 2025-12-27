@@ -15,7 +15,6 @@ interface CardsViewProps {
   isLoading: boolean;
   hasData: boolean;
   viewMode: 'table' | 'cards';
-  totalRecords: number;
   loadedChunks: { start: number; end: number; data: FormattedClaim[] }[];
   hasActiveFilters: boolean;
   selectedCardIndex: number;
@@ -34,7 +33,6 @@ export const CardsView: React.FC<CardsViewProps> = ({
   isLoading,
   hasData,
   viewMode,
-  totalRecords,
   loadedChunks,
   hasActiveFilters,
   selectedCardIndex,
@@ -176,12 +174,11 @@ export const CardsView: React.FC<CardsViewProps> = ({
         <div>
           <p className="text-sm text-gray-500">
             Virtualized cards: Showing {cardEndIndex - cardStartIndex} rendered
-            cards of {totalRecords.toLocaleString()} total claims. Scroll to
-            dynamically load/unload data for optimal performance.
+            cards. Scroll to dynamically load/unload data for optimal
+            performance.
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Rendered range: {renderedRangeStart}-{renderedRangeEnd} (of{' '}
-            {totalRecords.toLocaleString()} total)
+            Rendered range: {renderedRangeStart}-{renderedRangeEnd}
           </p>
         </div>
       </div>

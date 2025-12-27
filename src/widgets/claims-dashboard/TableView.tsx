@@ -19,7 +19,6 @@ interface TableViewProps {
   isLoading: boolean;
   hasData: boolean;
   viewMode: 'table' | 'cards';
-  totalRecords: number;
   loadedChunks: { start: number; end: number; data: FormattedClaim[] }[];
   getStatusColorClasses: (status: string) => string;
   currentSort?: SortOption;
@@ -46,7 +45,6 @@ export const TableView: React.FC<TableViewProps> = ({
   isLoading,
   hasData,
   viewMode,
-  totalRecords,
   loadedChunks,
   getStatusColorClasses,
   currentSort,
@@ -255,7 +253,6 @@ export const TableView: React.FC<TableViewProps> = ({
       <PerformanceInfo
         viewMode="table"
         renderedCount={endIndex - startIndex}
-        totalCount={totalRecords}
         renderedRangeStart={rangeStart}
         renderedRangeEnd={rangeEnd}
       />
