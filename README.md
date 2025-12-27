@@ -93,7 +93,7 @@ MOCK_PORT=${API_PORT}
 
 ```
 
-After copyping the values
+After copying the values
 
 ```bash
 Run the command
@@ -140,6 +140,7 @@ updated-senior-fe-assignment/
 - **Rsbuild**
 - **React Router**
 - **Tailwind CSS**
+- **Web Workers** - For offloading heavy data processing tasks
 
 ### Libraries & Tools
 
@@ -164,7 +165,7 @@ updated-senior-fe-assignment/
 ### Sliding Window Data Loading
 
 **Decision**: Load data in 1000-record virtualized chunks
-**Benefits**: Have more contriol pn the cirtualization and avoid library usage for bundle size
+**Benefits**: Have more control on the virtualization and avoid library usage for bundle size
 
 ### Current Data Management Approach
 
@@ -172,7 +173,7 @@ updated-senior-fe-assignment/
 **Benefits**: Simple, effective for current use case with good performance
 
 **Future Enhancement**: Implement LRU cache for data chunks with automatic eviction of least-used data, enabling instant navigation between cached ranges.
-Add Web Workers for offloading heavy data processing tasks from main thread, ensuring responsive UI during large dataset operations. Both of these were inprogress.
+Add Web Workers for offloading heavy data processing tasks from main thread, ensuring responsive UI during large dataset operations. Both of these were in progress.
 
 ### Feature-Sliced Design Implementation
 
@@ -266,7 +267,7 @@ pnpm typecheck
 
 - Implement **IndexedDB** for offline data persistence
 - Add **Service Worker** for background synchronization
-- Build intelligent cache invalidation using LRU or sliding windown pattern
+- Build intelligent cache invalidation using LRU or sliding window pattern
 
 ### 2. Enhanced Testing Coverage
 
@@ -294,7 +295,7 @@ pnpm typecheck
 - Add **GitHub Actions** for CI/CD
 - Implement **automated deployment** pipelines
 - Create **design system** documentation
-- Automate Code review procrss.
+- Automate code review process.
 
 ## Testing
 
