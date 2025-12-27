@@ -2,15 +2,15 @@ services:
   # React Frontend (Rsbuild)
   frontend:
     build:
-      context: ./react-claim-app
+      context: ./ReactJS-Claims-App
       args:
         - PUBLIC_API_URL=http://api-mock:${API_PORT}
         - FRONTEND_PORT=${FRONTEND_PORT}
         - API_PORT=${API_PORT}
     ports:
-      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+      - '${FRONTEND_PORT}:${FRONTEND_PORT}'
     volumes:
-      - ./react-claim-app:/app
+      - ./ReactJS-Claims-App:/app
       - /app/node_modules
       - /app/dist
     environment:
@@ -25,7 +25,7 @@ services:
     build:
       context: ./mock
     ports:
-      - "${MOCK_PORT}:${MOCK_PORT}"
+      - '${MOCK_PORT}:${MOCK_PORT}'
     volumes:
       - ./mock:/app
       - /app/node_modules
