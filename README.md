@@ -31,12 +31,31 @@ pnpm run dev
 
 Application will be available at `http://localhost:3000`
 
+### Environment Setup
+
+Make a new `.env` file inside react project and paste the below config so docker builds
+
+# Ports Configuration
+
+FRONTEND_PORT=3000
+API_PORT=8001
+
+# API Configuration for React app
+
+PUBLIC_API_URL=http://api-mock:${API_PORT}
+
+# Mock Server Configuration
+
+MOCK_PORT=${API_PORT}
+
+````
+
 ### Build for Production
 
 ```bash
 pnpm run build
 pnpm run preview
-```
+````
 
 ## Docker Setup Optional
 
