@@ -38,7 +38,7 @@ pnpm run build
 pnpm run preview
 ```
 
-## 🐳 Docker
+## Docker
 
 Run the full-stack application with Docker:
 
@@ -116,7 +116,7 @@ Add Web Workers for offloading heavy data processing tasks from main thread, ens
 - **Impact**: More code to maintain vs larger bundle
 - **Rationale**: Precise control for edge cases
 
-## 🔄 CI/CD Pipeline Jobs
+## CI/CD Pipeline Jobs
 
 The project includes a comprehensive CI/CD pipeline with 8 automated jobs:
 
