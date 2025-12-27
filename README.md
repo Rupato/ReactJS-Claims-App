@@ -15,8 +15,8 @@ A modern React application for managing insurance claims, built with performance
 
 ```bash
 cd mock
-pnpm install
-pnpm run mock
+npm install
+npm run mock
 ```
 
 API will be available at `http://localhost:8001`
