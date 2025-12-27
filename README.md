@@ -34,7 +34,7 @@ Application will be available at `http://localhost:3000`
 
 ### Environment Setup
 
-Create a .env file in the React project and add the following configuration for the Docker build.
+Create a .env file in the React project and add the following configuration.
 
 # Ports Configuration
 
@@ -64,15 +64,36 @@ pnpm run preview
 
 ### Prerequisites
 
-- Docker and Docker Compose installed on your system
+- Ensure Docker and Docker Compose installed on your system
 
 ### Quick Start
 
-```bash
-# After cloning place this react repo inside the updated-senior-fe-assignment
-# Ensure you're in the updated-senior-fe-assignment directory
-# with react-claim-app and mock folders alongside docker-compose.yml run
+- After cloning ReactJS-Claims-App place this react repo inside the updated-senior-fe-assignment provided
+- Ensure you're in the updated-senior-fe-assignment directory in the terminal
 
+Create a .env file in the updated-senior-fe-assignment now and add the following configuration for the Docker build to read values.
+
+# Ports Configuration
+
+```bash
+
+FRONTEND_PORT=3000
+API_PORT=8001
+
+# API Configuration for React app
+
+PUBLIC_API_URL=http://api-mock:${API_PORT}
+
+# Mock Server Configuration
+
+MOCK_PORT=${API_PORT}
+
+```
+
+After copyping the values
+
+```bash
+Run the command
 docker-compose up --build
 ```
 
@@ -101,7 +122,7 @@ Ensure your folder structure looks like this:
 ```
 updated-senior-fe-assignment/
 ├── mock/                    # Mock API server
-├── react-claim-app/         # React frontend (this folder)
+├── ReactJS-Claims-App/         # React frontend (this folder)
 ├── docker-compose.yml       # Docker orchestration
 ├── .env                     # Environment variables
 └── README.md               # Main project README
