@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import { SearchInput } from '../../shared/ui/SearchInput';
+import { SearchInput } from '@/shared/ui/SearchInput';
 
 describe('SearchInput', () => {
   const defaultProps = {

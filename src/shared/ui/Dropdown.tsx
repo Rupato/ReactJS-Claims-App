@@ -1,20 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-
-interface DropdownOption {
-  value: string;
-  label: string;
-}
-
-interface DropdownProps {
-  options: DropdownOption[];
-  value?: string | string[];
-  onChange: (value: string | string[]) => void;
-  placeholder?: string;
-  multiSelect?: boolean;
-  className?: string;
-  buttonClassName?: string;
-  menuClassName?: string;
-}
+import { DropdownProps } from './types';
 
 const Dropdown = ({
   options,
@@ -112,42 +97,48 @@ const Dropdown = ({
         >
           <div className="p-2">
             <div className="space-y-1 max-h-60 overflow-y-auto">
-              {options.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => handleOptionSelect(option.value)}
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded ${
-                    isSelected(option.value)
-                      ? 'bg-blue-50 text-blue-700 font-medium'
-                      : 'text-gray-700'
-                  }`}
-                  role="option"
-                  aria-selected={isSelected(option.value)}
-                >
-                  {multiSelect && (
-                    <input
-                      type="checkbox"
-                      checked={isSelected(option.value)}
-                      onChange={() => {}} // Handled by button click
-                      className="mr-2"
-                    />
-                  )}
-                  {option.label}
-                  {!multiSelect && isSelected(option.value) && (
-                    <svg
-                      className="w-4 h-4 inline-block ml-2 text-blue-600"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
+              {options.map((option) =>
+                option.customRender ? (
+                  <div key={option.value} className="w-full">
+                    {option.customRender}
+                  </div>
+                ) : (
+                  <button
+                    key={option.value}
+                    onClick={() => handleOptionSelect(option.value)}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 rounded ${
+                      isSelected(option.value)
+                        ? 'bg-blue-50 text-blue-700 font-medium'
+                        : 'text-gray-700'
+                    }`}
+                    role="option"
+                    aria-selected={isSelected(option.value)}
+                  >
+                    {multiSelect && (
+                      <input
+                        type="checkbox"
+                        checked={isSelected(option.value)}
+                        onChange={() => {}} // Handled by button click
+                        className="mr-2"
                       />
-                    </svg>
-                  )}
-                </button>
-              ))}
+                    )}
+                    {option.label}
+                    {!multiSelect && isSelected(option.value) && (
+                      <svg
+                        className="w-4 h-4 inline-block ml-2 text-blue-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    )}
+                  </button>
+                )
+              )}
             </div>
           </div>
         </div>

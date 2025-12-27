@@ -1,11 +1,5 @@
 import React from 'react';
-
-export interface ErrorFallbackProps {
-  error?: unknown;
-  onRetry?: () => void;
-}
-
-type ErrorCategory = 'network' | 'server' | 'auth' | 'generic';
+import { ErrorFallbackProps, ErrorCategory } from './types';
 
 const categorizeError = (error: unknown): ErrorCategory => {
   if (error instanceof TypeError && error.message.includes('fetch')) {

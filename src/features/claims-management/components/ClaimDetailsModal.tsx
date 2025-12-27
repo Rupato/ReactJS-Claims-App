@@ -1,18 +1,77 @@
 import React from 'react';
-import { FormattedClaim } from '../../../entities/claim/types';
-import { getStatusColorClasses } from '../../../shared/utils/status';
-
-interface ClaimDetailsModalProps {
-  claim: FormattedClaim | null;
-  isOpen: boolean;
-  onClose: () => void;
-}
+import { getStatusColorClasses } from '@/shared/utils/status';
+import { ClaimDetailsModalProps } from '@/features/claims-management/types';
 
 export const ClaimDetailsModal = ({
   claim,
   isOpen,
   onClose,
 }: ClaimDetailsModalProps) => {
+  // Define data structures outside JSX to prevent re-renders - hooks must be called before any early returns
+  const claimSections = React.useMemo(() => {
+    if (!claim) return [];
+    return [
+      {
+        title: 'Claim Details',
+        fields: [
+          {
+            label: 'Claim Number',
+            value: claim.number,
+            className: 'text-lg font-semibold',
+          },
+          { label: 'Policy Holder', value: claim.holder },
+          { label: 'Policy Number', value: claim.policyNumber },
+        ],
+      },
+      {
+        title: 'Dates',
+        fields: [
+          {
+            label: 'Incident Date',
+            value: (
+              <time dateTime={claim.incidentDate}>
+                {claim.formattedIncidentDate}
+              </time>
+            ),
+          },
+          {
+            label: 'Created Date',
+            value: (
+              <time dateTime={claim.createdAt}>
+                {claim.formattedCreatedDate}
+              </time>
+            ),
+          },
+        ],
+      },
+    ];
+  }, [claim]);
+
+  const financialItems = React.useMemo(() => {
+    if (!claim) return [];
+    return [
+      {
+        label: 'Claim Amount',
+        value: claim.formattedClaimAmount,
+        bgClass: 'bg-gray-50',
+        textClass: 'text-gray-900',
+      },
+      {
+        label: 'Processing Fee',
+        value: claim.formattedProcessingFee,
+        bgClass: 'bg-gray-50',
+        textClass: 'text-gray-900',
+      },
+      {
+        label: 'Total Amount',
+        value: claim.formattedTotalAmount,
+        bgClass: 'bg-blue-50',
+        textClass: 'text-blue-900',
+        labelClass: 'text-blue-600',
+      },
+    ];
+  }, [claim]);
+
   if (!isOpen || !claim) return null;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -84,51 +143,22 @@ export const ClaimDetailsModal = ({
 
             {/* Claim Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Claim Number
-                  </label>
-                  <p className="mt-1 text-lg font-semibold text-gray-900">
-                    {claim.number}
-                  </p>
+              {claimSections.map((section, sectionIndex) => (
+                <div key={sectionIndex} className="space-y-4">
+                  {section.fields.map((field, fieldIndex) => (
+                    <div key={fieldIndex}>
+                      <label className="text-sm font-medium text-gray-500">
+                        {field.label}
+                      </label>
+                      <p
+                        className={`mt-1 ${'className' in field ? field.className : 'text-gray-900'}`}
+                      >
+                        {field.value}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Policy Holder
-                  </label>
-                  <p className="mt-1 text-gray-900">{claim.holder}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Policy Number
-                  </label>
-                  <p className="mt-1 text-gray-900">{claim.policyNumber}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Incident Date
-                  </label>
-                  <p className="mt-1 text-gray-900">
-                    <time dateTime={claim.incidentDate}>
-                      {claim.formattedIncidentDate}
-                    </time>
-                  </p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Created Date
-                  </label>
-                  <p className="mt-1 text-gray-900">
-                    <time dateTime={claim.createdAt}>
-                      {claim.formattedCreatedDate}
-                    </time>
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* Financial Information */}
@@ -137,30 +167,18 @@ export const ClaimDetailsModal = ({
                 Financial Details
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <label className="text-sm font-medium text-gray-500">
-                    Claim Amount
-                  </label>
-                  <p className="mt-1 text-2xl font-bold text-gray-900">
-                    {claim.formattedClaimAmount}
-                  </p>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <label className="text-sm font-medium text-gray-500">
-                    Processing Fee
-                  </label>
-                  <p className="mt-1 text-2xl font-bold text-gray-900">
-                    {claim.formattedProcessingFee}
-                  </p>
-                </div>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <label className="text-sm font-medium text-blue-600">
-                    Total Amount
-                  </label>
-                  <p className="mt-1 text-2xl font-bold text-blue-900">
-                    {claim.formattedTotalAmount}
-                  </p>
-                </div>
+                {financialItems.map((item, index) => (
+                  <div key={index} className={`${item.bgClass} p-4 rounded-lg`}>
+                    <label
+                      className={`text-sm font-medium ${item.labelClass || 'text-gray-500'}`}
+                    >
+                      {item.label}
+                    </label>
+                    <p className={`mt-1 text-2xl font-bold ${item.textClass}`}>
+                      {item.value}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

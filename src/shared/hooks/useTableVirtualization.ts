@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { ROW_HEIGHT, BUFFER_SIZE } from '../virtualization';
+import { ROW_HEIGHT, BUFFER_SIZE } from '@/shared/virtualization';
 
 export const useTableVirtualization = (
   claimsLength: number,

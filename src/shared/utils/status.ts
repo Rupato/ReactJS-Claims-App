@@ -1,4 +1,4 @@
-import { STATUS_CONFIG } from '../constants';
+import { STATUS_CONFIG } from '@/shared/constants';
 
 // Status colors (used in both table and filters)
 export const getStatusColorClasses = (status: string): string => {

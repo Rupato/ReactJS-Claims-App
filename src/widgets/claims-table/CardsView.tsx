@@ -1,17 +1,7 @@
 import React, { useRef } from 'react';
-import { ClaimCard } from '../../entities/claim/ui/ClaimCard';
-import { CONTAINER_HEIGHT, CARD_HEIGHT } from '../../shared/virtualization';
-import { FormattedClaim } from '../../entities/claim/types';
-
-interface CardsViewProps {
-  formattedClaims: FormattedClaim[];
-  cardStartIndex: number;
-  cardEndIndex: number;
-  cardsPerRow: number;
-  onScroll: (event: React.UIEvent<HTMLDivElement>) => void;
-  hasActiveFilters: boolean;
-  onCardClick?: (claim: FormattedClaim) => void;
-}
+import { ClaimCard } from '@/entities/claim/ui/ClaimCard';
+import { CONTAINER_HEIGHT, CARD_HEIGHT } from '@/shared/virtualization';
+import { CardsViewProps } from '@/shared/ui/types';
 
 export const CardsView = ({
   formattedClaims,
