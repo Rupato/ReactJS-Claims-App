@@ -36,6 +36,7 @@ Application will be available at `http://localhost:3000`
 Make a new `.env` file inside react project and paste the below config so docker builds
 
 # Ports Configuration
+```bash
 
 FRONTEND_PORT=3000
 API_PORT=8001
