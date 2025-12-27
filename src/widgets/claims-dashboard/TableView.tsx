@@ -19,7 +19,6 @@ interface TableViewProps {
   isLoading: boolean;
   hasData: boolean;
   viewMode: 'table' | 'cards';
-  totalRecords: number;
   loadedChunks: { start: number; end: number; data: FormattedClaim[] }[];
   getStatusColorClasses: (status: string) => string;
   currentSort?: SortOption;
@@ -46,7 +45,6 @@ export const TableView: React.FC<TableViewProps> = ({
   isLoading,
   hasData,
   viewMode,
-  totalRecords,
   loadedChunks,
   getStatusColorClasses,
   currentSort,
@@ -235,6 +233,17 @@ export const TableView: React.FC<TableViewProps> = ({
                 </td>
               </tr>
             )}
+
+            {/* No claims found message when not loading and no claims */}
+            {!isLoading && formattedClaims.length === 0 && (
+              <tr>
+                <td colSpan={9} className="px-6 py-12 text-center">
+                  <div className="text-gray-500">
+                    <p className="text-lg font-medium">No claims found</p>
+                  </div>
+                </td>
+              </tr>
+            )}
             {/* Bottom spacer for virtualization */}
             <tr
               style={{
@@ -255,7 +264,6 @@ export const TableView: React.FC<TableViewProps> = ({
       <PerformanceInfo
         viewMode="table"
         renderedCount={endIndex - startIndex}
-        totalCount={totalRecords}
         renderedRangeStart={rangeStart}
         renderedRangeEnd={rangeEnd}
       />

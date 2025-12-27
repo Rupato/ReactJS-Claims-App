@@ -4,7 +4,6 @@ import { isMobile } from '@/shared/utils';
 interface PerformanceInfoProps {
   viewMode: 'table' | 'cards';
   renderedCount: number;
-  totalCount: number;
   renderedRangeStart?: number;
   renderedRangeEnd?: number;
 }
@@ -12,7 +11,6 @@ interface PerformanceInfoProps {
 export const PerformanceInfo: React.FC<PerformanceInfoProps> = ({
   viewMode,
   renderedCount,
-  totalCount,
   renderedRangeStart,
   renderedRangeEnd,
 }) => {
@@ -23,16 +21,14 @@ export const PerformanceInfo: React.FC<PerformanceInfoProps> = ({
     <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
       <div>
         <p className="text-sm text-gray-500">
-          Virtualized {viewType}: Showing {renderedCount} rendered {itemType} of{' '}
-          {totalCount.toLocaleString()} total claims. Scroll to dynamically
-          load/unload data for optimal performance.
+          Virtualized {viewType}: Showing {renderedCount} rendered {itemType}.
+          Scroll to dynamically load/unload data for optimal performance.
         </p>
         {!isMobile() &&
           renderedRangeStart !== undefined &&
           renderedRangeEnd !== undefined && (
             <p className="text-xs text-gray-400 mt-1">
-              Rendered range: {renderedRangeStart}-{renderedRangeEnd} (of{' '}
-              {totalCount.toLocaleString()} total)
+              Rendered range: {renderedRangeStart}-{renderedRangeEnd}
             </p>
           )}
         {isMobile() && (

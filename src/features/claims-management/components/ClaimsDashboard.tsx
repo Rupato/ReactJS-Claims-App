@@ -95,7 +95,6 @@ const ClaimsDashboard: React.FC = () => {
   // Web worker for claims data
   const {
     claims,
-    totalRecords,
     isLoading,
     hasData,
     error: workerError,
@@ -416,7 +415,6 @@ const ClaimsDashboard: React.FC = () => {
               isLoading={isLoading}
               hasData={hasData}
               viewMode={viewMode}
-              totalRecords={totalRecords}
               loadedChunks={loadedChunks}
               getStatusColorClasses={getStatusColorClasses}
               currentSort={tableSort}
@@ -435,7 +433,6 @@ const ClaimsDashboard: React.FC = () => {
               isLoading={isLoading}
               hasData={hasData}
               viewMode={viewMode}
-              totalRecords={totalRecords}
               loadedChunks={loadedChunks}
               hasActiveFilters={hasActiveFilters}
               selectedCardIndex={selectedCardIndex}
