@@ -39,7 +39,7 @@ const commonConfig = {
 };
 
 export default [
-  { ignores: ['dist'] },
+  { ignores: ['dist', 'updated-senior-fe-assignment'] },
   {
     files: ['**/*.{js,jsx}'],
     ...commonConfig,

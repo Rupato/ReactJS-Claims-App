@@ -38,15 +38,52 @@ pnpm run build
 pnpm run preview
 ```
 
-## Docker
+## Docker Setup Optional
 
-Run the full-stack application with Docker:
+### Prerequisites
+
+- Docker and Docker Compose installed on your system
+
+### Quick Start
 
 ```bash
-cd react-claim-app && docker-compose up --build
+# After cloning place this react repo inside the updated-senior-fe-assignment
+# Ensure you're in the updated-senior-fe-assignment directory
+# with react-claim-app and mock folders alongside docker-compose.yml run
+
+docker-compose up --build
 ```
 
-Access at `http://localhost:3000`
+This will automatically:
+
+- Build and start the React frontend on `http://localhost:3000`
+- Build and start the mock API server on `http://localhost:8001`
+- Set up proper networking between containers
+
+### Access the Application
+
+- **Frontend**: http://localhost:3000
+- **API**: http://localhost:8001
+
+### Development Commands
+
+```bash
+# Stop the application
+docker-compose down
+```
+
+### Project Structure
+
+Ensure your folder structure looks like this:
+
+```
+updated-senior-fe-assignment/
+├── mock/                    # Mock API server
+├── react-claim-app/         # React frontend (this folder)
+├── docker-compose.yml       # Docker orchestration
+├── .env                     # Environment variables
+└── README.md               # Main project README
+```
 
 ## Tech Stack
 
