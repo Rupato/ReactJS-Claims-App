@@ -33,7 +33,7 @@ Application will be available at `http://localhost:3000`
 
 ### Environment Setup
 
-Make a new `.env` file inside react project and paste the below config so docker builds
+Create a .env file in the React project and add the following configuration for the Docker build.
 
 # Ports Configuration
 
