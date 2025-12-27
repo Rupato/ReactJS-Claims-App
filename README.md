@@ -37,6 +37,8 @@ Make a new `.env` file inside react project and paste the below config so docker
 
 # Ports Configuration
 
+```bash
+
 FRONTEND_PORT=3000
 API_PORT=8001
 
@@ -48,14 +50,14 @@ PUBLIC_API_URL=http://api-mock:${API_PORT}
 
 MOCK_PORT=${API_PORT}
 
-````
+```
 
 ### Build for Production
 
 ```bash
 pnpm run build
 pnpm run preview
-````
+```
 
 ## Docker Setup Optional
 
