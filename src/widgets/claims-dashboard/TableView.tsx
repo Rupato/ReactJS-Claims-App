@@ -233,6 +233,17 @@ export const TableView: React.FC<TableViewProps> = ({
                 </td>
               </tr>
             )}
+
+            {/* No claims found message when not loading and no claims */}
+            {!isLoading && formattedClaims.length === 0 && (
+              <tr>
+                <td colSpan={9} className="px-6 py-12 text-center">
+                  <div className="text-gray-500">
+                    <p className="text-lg font-medium">No claims found</p>
+                  </div>
+                </td>
+              </tr>
+            )}
             {/* Bottom spacer for virtualization */}
             <tr
               style={{

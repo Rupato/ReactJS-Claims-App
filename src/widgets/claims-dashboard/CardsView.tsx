@@ -149,6 +149,15 @@ export const CardsView: React.FC<CardsViewProps> = ({
             </div>
           )}
 
+          {/* No claims found message when not loading and no claims */}
+          {!isLoading && formattedClaims.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="text-gray-500 text-center">
+                <p className="text-lg font-medium">No claims found</p>
+              </div>
+            </div>
+          )}
+
           {/* Bottom spacer for cards virtualization */}
           <div
             style={{
