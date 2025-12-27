@@ -1,21 +1,9 @@
 import React, { useState, useCallback } from 'react';
-
-interface ErrorBoundaryProps {
-  children: React.ReactNode;
-  fallback?: React.ComponentType<{ error?: Error; retry?: () => void }>;
-  onError?: (error: Error, errorInfo?: React.ErrorInfo) => void;
-}
-
-interface ErrorState {
-  hasError: boolean;
-  error?: Error;
-  errorInfo?: React.ErrorInfo;
-}
-
-interface DefaultErrorFallbackProps {
-  error?: Error;
-  onRetry: () => void;
-}
+import {
+  ErrorBoundaryProps,
+  ErrorState,
+  DefaultErrorFallbackProps,
+} from './types';
 
 const ErrorBoundary = ({
   children,

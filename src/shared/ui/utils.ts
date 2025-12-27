@@ -1,4 +1,4 @@
-import { SortOption } from '../types';
+import { SortOption } from '@/shared/types';
 
 export const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: 'created-newest', label: 'Created date (newest first)' },

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { ClaimCard } from '../ClaimCard';
+import { ClaimCard } from '@/entities/claim/ui/ClaimCard';
 
 const mockClaim = {
   id: 1,

@@ -1,7 +1,7 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { useSearch } from '../../shared/hooks/useSearch';
-import { Claim } from '../../entities/claim/types';
+import { useSearch } from '@/shared/hooks/useSearch';
+import { Claim } from '@/entities/claim/types';
 
 // Mock timer functions
 beforeEach(() => {

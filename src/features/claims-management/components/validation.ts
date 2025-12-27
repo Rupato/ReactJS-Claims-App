@@ -1,5 +1,5 @@
 import * as yup from 'yup';
-import { VALIDATION_CONSTANTS } from '../../../shared/constants';
+import { VALIDATION_CONSTANTS } from '@/shared/constants';
 
 export const createClaimValidationSchema = yup.object({
   amount: yup
@@ -74,7 +74,3 @@ export const createClaimValidationSchema = yup.object({
       }
     ),
 });
-
-export type CreateClaimFormData = yup.InferType<
-  typeof createClaimValidationSchema
->;

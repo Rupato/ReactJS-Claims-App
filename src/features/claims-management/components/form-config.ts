@@ -1,26 +1,5 @@
-export interface FormFieldConfig {
-  name:
-    | 'amount'
-    | 'processingFee'
-    | 'holder'
-    | 'policyNumber'
-    | 'insuredName'
-    | 'incidentDate'
-    | 'description';
-  label: string;
-  type: 'number' | 'text' | 'textarea' | 'datepicker';
-  placeholder?: string;
-  step?: string;
-  min?: string;
-  max?: string;
-  rows?: number;
-  helperText?: string;
-  gridSpan: string;
-  showAutoFilled?: boolean;
-  showLoading?: boolean;
-}
-
-import { VALIDATION_CONSTANTS } from '../../../shared/constants';
+import { VALIDATION_CONSTANTS } from '@/shared/constants';
+import { FormFieldConfig } from '@/features/claims-management/types';
 
 export const formFieldConfigs: FormFieldConfig[] = [
   {

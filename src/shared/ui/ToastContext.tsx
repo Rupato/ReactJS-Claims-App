@@ -1,33 +1,5 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  ReactNode,
-} from 'react';
-
-export interface ToastItem {
-  id: string;
-  message: string;
-  type: 'success' | 'error' | 'info' | 'warning';
-  duration?: number;
-}
-
-// eslint-disable-next-line react-refresh/only-export-components
-
-interface ToastContextType {
-  toasts: ToastItem[];
-  addToast: (
-    message: string,
-    type: ToastItem['type'],
-    duration?: number
-  ) => void;
-  removeToast: (id: string) => void;
-  success: (message: string, duration?: number) => void;
-  error: (message: string, duration?: number) => void;
-  info: (message: string, duration?: number) => void;
-  warning: (message: string, duration?: number) => void;
-}
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { ToastItem, ToastContextType, ToastProviderProps } from './types';
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
@@ -38,10 +10,6 @@ export const useToast = () => {
   }
   return context;
 };
-
-interface ToastProviderProps {
-  children: ReactNode;
-}
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [toasts, setToasts] = useState<ToastItem[]>([]);

@@ -15,7 +15,6 @@ function formatClaim(claim) {
 // Load initial 1000 claims with cache busting
 async function loadInitialClaims() {
   try {
-    console.log('🚀 [Worker] Loading initial 1000 claims...');
     const response = await fetch(
       'http://localhost:8001/claims?_start=0&_limit=1000',
       {
@@ -29,10 +28,9 @@ async function loadInitialClaims() {
       throw new Error(`Failed to fetch initial claims: ${response.status}`);
     }
     const claims = await response.json();
-    console.log(`✅ [Worker] Loaded ${claims.length} initial claims`);
     return claims.map(formatClaim);
   } catch (error) {
-    console.error('❌ [Worker] Error loading initial claims:', error);
+    console.error('[Worker] Error loading initial claims:', error);
     throw new Error(`Failed to load initial claims: ${error}`);
   }
 }
@@ -40,9 +38,6 @@ async function loadInitialClaims() {
 // Load a specific chunk with cache busting
 async function loadChunk(startIndex, limit) {
   try {
-    console.log(
-      `🔄 [Worker] Loading chunk ${startIndex}-${startIndex + limit - 1}...`
-    );
     const response = await fetch(
       `http://localhost:8001/claims?_start=${startIndex}&_limit=${limit}`,
       {
@@ -56,13 +51,10 @@ async function loadChunk(startIndex, limit) {
       throw new Error(`Failed to fetch chunk: ${response.status}`);
     }
     const claims = await response.json();
-    console.log(
-      `✅ [Worker] Loaded ${claims.length} claims for chunk ${startIndex}-${startIndex + limit - 1}`
-    );
     return claims.map(formatClaim);
   } catch (error) {
     console.error(
-      `❌ [Worker] Error loading chunk ${startIndex}-${startIndex + limit - 1}:`,
+      `[Worker] Error loading chunk ${startIndex}-${startIndex + limit - 1}:`,
       error
     );
     throw new Error(`Failed to load chunk: ${error}`);
@@ -72,7 +64,6 @@ async function loadChunk(startIndex, limit) {
 // Load all claims for refresh with cache busting
 async function loadAllClaims() {
   try {
-    console.log('🔄 [Worker] Refreshing all claims...');
     const timestamp = Date.now(); // Add timestamp for cache busting
     const response = await fetch(
       `http://localhost:8001/claims?_start=0&_limit=1000000&_t=${timestamp}`,
@@ -87,10 +78,9 @@ async function loadAllClaims() {
       throw new Error(`Failed to refresh claims: ${response.status}`);
     }
     const claims = await response.json();
-    console.log(`✅ [Worker] Refreshed ${claims.length} total claims`);
     return claims.map(formatClaim);
   } catch (error) {
-    console.error('❌ [Worker] Error refreshing claims:', error);
+    console.error('[Worker] Error refreshing claims:', error);
     throw new Error(`Failed to refresh claims: ${error}`);
   }
 }

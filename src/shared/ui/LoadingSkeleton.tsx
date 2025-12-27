@@ -1,8 +1,5 @@
 import React from 'react';
-
-export interface LoadingSkeletonProps {
-  viewMode: 'table' | 'cards';
-}
+import { LoadingSkeletonProps } from './types';
 
 export const LoadingSkeleton = ({ viewMode }: LoadingSkeletonProps) => {
   if (viewMode === 'table') {

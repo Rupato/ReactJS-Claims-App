@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Claim } from '../../entities/claim/types';
+import { Claim } from '@/entities/claim/types';
 
 export const useSearch = (
   claims: Claim[],

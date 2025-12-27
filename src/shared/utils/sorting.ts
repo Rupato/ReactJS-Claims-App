@@ -1,5 +1,5 @@
-import { Claim } from '../../entities/claim/types';
-import { SortOption } from '../types';
+import { Claim } from '@/entities/claim/types';
+import { SortOption } from '@/shared/types';
 
 export const sortClaims = (
   claims: Claim[],

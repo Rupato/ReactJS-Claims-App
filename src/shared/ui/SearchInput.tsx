@@ -1,11 +1,5 @@
 import React from 'react';
-
-export interface SearchInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  isSearching: boolean;
-  placeholder?: string;
-}
+import { SearchInputProps } from './types';
 
 export const SearchInput = ({
   value,

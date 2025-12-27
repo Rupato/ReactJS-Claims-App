@@ -1,18 +1,9 @@
 import React from 'react';
-import { SortOption } from '../../../shared/types';
-
-interface TableHeaderProps {
-  columnVisibility: Record<string, boolean>;
-  onColumnSort?: (sortOption: SortOption) => void;
-  currentSort?: SortOption;
-}
-
-interface TableHeaderItem {
-  key: string;
-  label: string;
-  sortable?: boolean;
-  align?: 'left' | 'right' | 'center';
-}
+import {
+  TableHeaderProps,
+  TableHeaderItem,
+  SortOption,
+} from '@/shared/ui/types';
 
 const tableHeaders: TableHeaderItem[] = [
   { key: 'number', label: 'Claim ID', sortable: true },

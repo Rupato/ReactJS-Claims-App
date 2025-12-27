@@ -1,12 +1,6 @@
 import React from 'react';
-import { getStatusColorClasses } from '../../../shared/utils/status';
-import { FormattedClaim } from '../types';
-
-interface ClaimCardProps {
-  claim: FormattedClaim;
-  onCardClick?: (claim: FormattedClaim) => void;
-  isSelected?: boolean;
-}
+import { getStatusColorClasses } from '@/shared/utils/status';
+import { ClaimCardProps } from '@/shared/ui/types';
 
 const ClaimCard = React.memo(
   ({ claim, onCardClick, isSelected = false }: ClaimCardProps) => {

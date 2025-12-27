@@ -18,6 +18,11 @@ export default defineConfig({
       ),
     },
   },
+  resolve: {
+    alias: {
+      '@': './src',
+    },
+  },
   html: {
     template: './index.html',
   },

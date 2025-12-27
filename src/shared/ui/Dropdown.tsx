@@ -1,21 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-
-interface DropdownOption {
-  value: string;
-  label: string;
-  customRender?: React.ReactNode;
-}
-
-interface DropdownProps {
-  options: DropdownOption[];
-  value?: string | string[];
-  onChange: (value: string | string[]) => void;
-  placeholder?: string;
-  multiSelect?: boolean;
-  className?: string;
-  buttonClassName?: string;
-  menuClassName?: string;
-}
+import { DropdownProps } from './types';
 
 const Dropdown = ({
   options,

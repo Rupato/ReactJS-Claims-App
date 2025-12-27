@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { CONTAINER_HEIGHT, CARD_HEIGHT } from '../virtualization';
+import { CONTAINER_HEIGHT, CARD_HEIGHT } from '@/shared/virtualization';
 
 export const useCardsVirtualization = (
   claimsLength: number,

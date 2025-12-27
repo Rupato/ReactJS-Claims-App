@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 // import { render, screen } from '@testing-library/react';
-// import ClaimsDashboard from '../ClaimsDashboard';
+// import ClaimsDashboard from '@/features/claims-management/components/ClaimsDashboard';
 
 // Mock the fetch API to avoid network calls in tests
 beforeAll(() => {
