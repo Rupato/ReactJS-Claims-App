@@ -129,6 +129,17 @@ The project includes a comprehensive CI/CD pipeline with 8 automated jobs:
 - **Security Job** (`CI / security`)
 - **Bundle Size Job** (`CI / bundle-size`)
 
+### Branching Strategy & GitHub Rules
+
+**Branching Strategy**: Implemented Git Flow with `main` branch as production and feature branches for development work. All changes merged via pull requests to ensure code review and quality gates.
+
+**GitHub Rules**:
+
+- Code owner reviews required for all pull requests
+- All CI/CD pipelines must pass before merge
+- Branch protection rules enabled on `main` branch
+- Automated dependency updates via Dependabot
+
 ### ESLint Configuration
 
 The project uses a modern ESLint flat config setup with comprehensive rules for:
