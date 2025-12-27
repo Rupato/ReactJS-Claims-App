@@ -1,5 +1,8 @@
 # Claims Management System
 
+<img width="1502" height="594" alt="image" src="https://github.com/user-attachments/assets/dc757046-4e6a-4df1-8db8-8e39afe6dfa1" />
+<img width="1501" height="738" alt="image" src="https://github.com/user-attachments/assets/78e1ed01-1ae0-49d4-bf2e-81dbe5e45f37" />
+
 A modern React application for managing insurance claims, built with performance and user experience in mind.
 
 ## Getting Started
@@ -250,6 +253,8 @@ pnpm typecheck
 
 ## Performance Metrics
 
+- **CI/CD Build Time**: Approximately 20-30 seconds (includes testing, linting, and deployment)
+- **Local Build Time**: Less than 1 second for production bundles
 - **Bundle Size**: `169KB gzipped`
 - **Data Handling**: Unlimited records with constant memory usage
 - **Load Time**: Fast initial load with lazy route splitting
