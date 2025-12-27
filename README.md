@@ -52,7 +52,7 @@ Access at `http://localhost:3000`
 
 ### Core Technologies
 
-- **React 19**
+- **React 19** - Chosen for its flexibility and broad ecosystem support, enabling integration with legacy systems and various backend architectures
 - **TypeScript**
 - **Rsbuild**
 - **React Router**
@@ -120,23 +120,14 @@ Add Web Workers for offloading heavy data processing tasks from main thread, ens
 
 The project includes a comprehensive CI/CD pipeline with 8 automated jobs:
 
-### 1. **Lint Job** (`CI / lint`)
-
-### 2. **Test Job** (`CI / test`)
-
-### 3. **Build Job** (`CI / build`)
-
-### 4. **Type Check Job** (`CI / typecheck`)
-
-### 5. **Format Job** (`CI / format`)
-
-### 6. **Coverage Job** (`CI / coverage`)
-
-- **Runs**: Test coverage analysis
-
-### 7. **Security Job** (`CI / security`)
-
-### 8. **Bundle Size Job** (`CI / bundle-size`)
+- **Lint Job** (`CI / lint`)
+- **Test Job** (`CI / test`)
+- **Build Job** (`CI / build`)
+- **Type Check Job** (`CI / typecheck`)
+- **Format Job** (`CI / format`)
+- **Coverage Job** (`CI / coverage`)
+- **Security Job** (`CI / security`)
+- **Bundle Size Job** (`CI / bundle-size`)
 
 ### ESLint Configuration
 
@@ -165,6 +156,13 @@ pnpm format:check
 # TypeScript type checking
 pnpm typecheck
 ```
+
+## Performance Metrics
+
+- **Bundle Size**: `169KB gzipped`
+- **Data Handling**: Unlimited records with constant memory usage
+- **Load Time**: Fast initial load with lazy route splitting
+- **Virtualization**: Smooth scrolling with 1000+ rendered rows
 
 ## What I'd Improve With More Time
 
@@ -201,13 +199,6 @@ pnpm typecheck
 - Implement **automated deployment** pipelines
 - Create **design system** documentation
 - Automate Code review procrss.
-
-## Performance Metrics
-
-- **Bundle Size**: `169KB gzipped`
-- **Data Handling**: Unlimited records with constant memory usage
-- **Load Time**: Fast initial load with lazy route splitting
-- **Virtualization**: Smooth scrolling with 1000+ rendered rows
 
 ## Testing
 
