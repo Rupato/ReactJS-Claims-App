@@ -48,12 +48,18 @@ export const LoadControls: React.FC<LoadControlsProps> = ({
               <button
                 onClick={onLoadMore}
                 disabled={
+                  (Array.isArray(loadedChunks[0]?.data)
+                    ? loadedChunks[0].data.length
+                    : 0) >= 1000 &&
                   scrollPosition.top + scrollPosition.height <
-                  scrollPosition.scrollHeight - 10
+                    scrollPosition.scrollHeight - 10
                 }
                 className={`inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                  (Array.isArray(loadedChunks[0]?.data)
+                    ? loadedChunks[0].data.length
+                    : 0) >= 1000 &&
                   scrollPosition.top + scrollPosition.height >=
-                  scrollPosition.scrollHeight - 10
+                    scrollPosition.scrollHeight - 10
                     ? 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 cursor-pointer'
                     : 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
                 }`}
